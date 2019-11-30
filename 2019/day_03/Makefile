@@ -14,7 +14,7 @@ DAY_NUM:=$(subst day_0, , $(CUR_DIR))
 DAY_NUM:=$(strip $(subst day_, , $(DAY_NUM)))
 
 # AOC event year
-AOC_EVENT_YEAR=2018
+AOC_EVENT_YEAR=2019
 
 # AOC day's input datafile name
 INPUT_DATAFILE=input.txt

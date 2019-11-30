@@ -1,2 +1,2 @@
-# advent_of_code_2019
-Advent of Code 2019
+# advent_of_code
+Advent of Code yearly puzzles

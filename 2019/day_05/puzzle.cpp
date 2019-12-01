@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
-    const auto example1 = 42;
+    const auto example1 = 1;
     assert(solve_puzzle1<vector<int>>({example1}) == 42 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    const auto example2 = 42;
+    const auto example2 = 2;
     assert(solve_puzzle2<vector<int>>({example2}) == 42 && "Error verifying puzzle #2");
 
     // Solve puzzle #2

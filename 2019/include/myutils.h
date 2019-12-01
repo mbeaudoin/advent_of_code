@@ -6,13 +6,15 @@
 #include <iterator>
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace myutils
 {
 
 template <typename T_value = char,
           typename T_container = std::vector<T_value>>
-auto read_file(const char* filename, const bool debug=false)
+    auto read_file(const std::string filename, const bool debug=false)
     {
         T_container buffer;
 
@@ -33,6 +35,12 @@ auto read_file(const char* filename, const bool debug=false)
         }
 
         return buffer;
+    }
+
+
+    inline bool file_exists (const std::string& name)
+    {
+        return ( access( name.c_str(), F_OK ) != -1 );
     }
 }
 

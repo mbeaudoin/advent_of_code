@@ -7,12 +7,23 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
+    // Need a command-line parameter for the input filename
     if (argc != 2) {
-        cerr << "Missing input" << endl;
+        cerr << "Error: missing input" << endl;
         return EXIT_FAILURE;
     }
 
-    auto delta_freq = myutils::read_file<int, std::vector<int> >(argv[1]);
+    string filename(argv[1]);
+
+    // This file needs to exist
+    if (! myutils::file_exists(filename))
+    {
+        cerr << "Error: nonexistent file: " << filename << endl;
+        return EXIT_FAILURE;
+    }
+
+    // Reading the data
+    auto delta_freq = myutils::read_file<int, std::vector<int> >(filename);
 
     // Puzzle #1
     auto answer = 42;

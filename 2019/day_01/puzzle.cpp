@@ -1,9 +1,16 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <math.h>       /* floor */
+
 #include "include/myutils.h"
 
 using namespace std;
+
+int compute_fuel(int module_mass)
+{
+    return int(floor(float(module_mass)/3.0)) - 2 ;
+}
 
 int main(int argc, char *argv[])
 {
@@ -26,9 +33,24 @@ int main(int argc, char *argv[])
     auto data = myutils::read_file<int, std::vector<int> >(filename);
 
     // Puzzle #1
-    auto answer = 42;
-    std::cout << "Answer puzzle #1: "<< answer << std::endl;
+    auto tot_fuel = 0;
+    for (auto& module_mass : data)
+        tot_fuel += compute_fuel(module_mass);
+
+    std::cout << "Answer puzzle #1: "<< tot_fuel << std::endl;
 
     // Puzzle #2
-    std::cout << "Answer puzzle #2: "<< answer << std::endl;
+    tot_fuel = 0;
+    for (auto& module_mass : data)
+    {
+        auto this_module_fuel = compute_fuel(module_mass);
+
+        while ( this_module_fuel > 0)
+        {
+            tot_fuel += this_module_fuel;
+            this_module_fuel = compute_fuel(this_module_fuel);
+        }
+    }
+
+    std::cout << "Answer puzzle #2: "<< tot_fuel << std::endl;
 }

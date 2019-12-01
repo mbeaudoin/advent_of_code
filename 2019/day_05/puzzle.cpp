@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto delta_freq = myutils::read_file<int, std::vector<int> >(filename);
+    auto data = myutils::read_file<int, std::vector<int> >(filename);
 
     // Puzzle #1
     auto answer = 42;

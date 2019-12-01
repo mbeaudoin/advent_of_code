@@ -22,13 +22,38 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    // Reading the data
-    auto data = myutils::read_file<int, std::vector<int> >(filename);
+    auto delta_freq = myutils::read_file<int, std::vector<int> >(argv[1]);
 
     // Puzzle #1
-    auto answer = 42;
-    std::cout << "Answer puzzle #1: "<< answer << std::endl;
+    auto final_freq = 0;
+    for (auto& df : delta_freq)
+        final_freq += df;
+
+    std::cout << "Answer puzzle #1: "<< final_freq << std::endl;
 
     // Puzzle #2
-    std::cout << "Answer puzzle #2: "<< answer << std::endl;
+    int cur_freq = 0;
+    std::set<int> visited_freq;
+    bool found = false;
+
+    while(!found)
+    {
+        for (auto& df : delta_freq)
+	{
+            cur_freq += df;
+            const bool is_in = visited_freq.find(cur_freq) != visited_freq.end();
+            if (is_in)
+	    {
+                std::cout << "Answer puzzle #2: " << cur_freq << std::endl;
+                found = true;
+                break;
+	    }
+            else
+	    {
+                //std::cout << "Delta_freq: " << df << ": Cur freq: " << cur_freq << std::endl;
+                visited_freq.insert(cur_freq);
+	    }
+	}
+    }
+
 }

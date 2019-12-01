@@ -46,3 +46,5 @@ flycheck_*.el
 
 # Various files
 a.out
+input.txt
+puzzle

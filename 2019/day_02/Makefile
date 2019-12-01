@@ -22,28 +22,20 @@ INPUT_DATAFILE=input.txt
 # Input datafile URL
 AOC_INPUT_URL=https://adventofcode.com/$(AOC_EVENT_YEAR)/day/$(DAY_NUM)/input
 
-all: getdata puzzle1 run1 puzzle2 run2
+all: getdata puzzle run
 
-puzzle1:
-	@echo "Compiling puzzle #1"
-	$(CC) -o puzzle1 $(CXXFLAGS) puzzle1.cpp
+puzzle: puzzle.cpp
+	@echo "Compiling puzzle"
+	$(CC) -o puzzle $(CXXFLAGS) puzzle.cpp
 
-puzzle2:
-	@echo "Compiling puzzle #2"
-	$(CC) -o puzzle2 $(CXXFLAGS) puzzle2.cpp
-
-run1: getdata puzzle1
-	@echo "Solving puzzle #1"
-	./puzzle1 $(INPUT_DATAFILE)
-
-run2: getdata puzzle2
-	@echo "Solving puzzle #2"
-	./puzzle2 $(INPUT_DATAFILE)
+run: getdata puzzle
+	@echo "Solving puzzle"
+	./puzzle $(INPUT_DATAFILE)
 
 getdata:
 	@echo "Getting data for day # $(DAY_NUM)"
-	$(WGET) $(WGET_ARGS) -O $(INPUT_DATAFILE) $(AOC_INPUT_URL)
+	test -f $(INPUT_DATAFILE) || $(WGET) $(WGET_ARGS) -O $(INPUT_DATAFILE) $(AOC_INPUT_URL)
 
 clean:
 	@echo "Cleaning up"
-	rm -f puzzle1 puzzle2 *~ $(INPUT_DATAFILE)
+	rm -f puzzle *~ $(INPUT_DATAFILE)

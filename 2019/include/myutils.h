@@ -3,16 +3,36 @@
 
 #include <fstream>
 #include <streambuf>
+#include <iterator>
 #include <vector>
+#include <algorithm>
 
 namespace myutils
 {
-    template <typename T = std::vector<char>>
-    auto read_file(const char* filename)
+
+template <typename T_value = char,
+          typename T_container = std::vector<T_value>>
+auto read_file(const char* filename, const bool debug=false)
     {
-        auto ifs = std::ifstream(filename);
-        return T(std::istreambuf_iterator<char>(ifs),
-        std::istreambuf_iterator<char>{});
+        T_container buffer;
+
+        std::ifstream file(filename);
+
+        std::copy(
+            std::istream_iterator<T_value>(file),
+            std::istream_iterator<T_value>(),
+            std::back_inserter(buffer)
+        );
+
+        if(debug)
+        {
+            std::cout << "Buffer len: " << buffer.size() << std::endl;
+
+            for (auto& val : buffer)
+                std::cout << val << std::endl;
+        }
+
+        return buffer;
     }
 }
 

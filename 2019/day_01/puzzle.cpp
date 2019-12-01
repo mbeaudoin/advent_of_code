@@ -1,6 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <set>
+#include <numeric>
 #include <math.h>       /* floor */
 
 #include "include/myutils.h"
@@ -33,24 +33,38 @@ int main(int argc, char *argv[])
     auto data = myutils::read_file<int, std::vector<int> >(filename);
 
     // Puzzle #1
-    auto tot_fuel = 0;
-    for (auto& module_mass : data)
-        tot_fuel += compute_fuel(module_mass);
+    auto accum_fuel_module_only = [](int sum, int val)
+    {
+        return std::move(sum) + compute_fuel(val);
+    };
 
-    std::cout << "Answer puzzle #1: "<< tot_fuel << std::endl;
+    int tot_fuel1 = std::accumulate(
+        data.begin(),
+        data.end(),
+        0,
+        accum_fuel_module_only
+    );
+
+    std::cout << "Answer puzzle #1: "<< tot_fuel1 << std::endl;
 
     // Puzzle #2
-    tot_fuel = 0;
-    for (auto& module_mass : data)
+    auto accum_fuel_module_and_fuel = [](int sum, int val)
     {
-        auto this_module_fuel = compute_fuel(module_mass);
+        auto this_module_fuel = compute_fuel(val);
 
-        while ( this_module_fuel > 0)
+        while (this_module_fuel > 0)
         {
-            tot_fuel += this_module_fuel;
+            sum += this_module_fuel;
             this_module_fuel = compute_fuel(this_module_fuel);
         }
-    }
+        return std::move(sum);
+    };
 
-    std::cout << "Answer puzzle #2: "<< tot_fuel << std::endl;
+    int tot_fuel2 = std::accumulate(
+        data.begin(),
+        data.end(),
+        0,
+        accum_fuel_module_and_fuel);
+
+    std::cout << "Answer puzzle #2: "<< tot_fuel2 << std::endl;
 }

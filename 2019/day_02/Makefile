@@ -1,5 +1,5 @@
 # Compilation variables
-CC=g++
+CXX=g++
 CPPFLAGS= -I../include
 CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
 
@@ -23,13 +23,13 @@ INPUT_DATAFILE=input.txt
 AOC_INPUT_URL=https://adventofcode.com/$(AOC_EVENT_YEAR)/day/$(DAY_NUM)/input
 
 SRCS = puzzle.cpp
-OBJ = $(SRCS:.cpp=.o)
+OBJS = $(SRCS:.cpp=.o)
 
 all: getdata puzzle run
 
 puzzle: $(OBJS)
 	@echo "Compiling puzzle"
-	$(CC) -o puzzle $(CXXFLAGS) $(SRCS)
+	$(CXX) -o puzzle $(CXXFLAGS) $(OBJS)
 
 run: getdata puzzle
 	@echo "Solving puzzle"
@@ -41,7 +41,10 @@ getdata:
 
 clean:
 	@echo "Cleaning up"
-	rm -f puzzle *~ $(INPUT_DATAFILE)
+	rm -f puzzle $(OBJS) *~ $(INPUT_DATAFILE) Makefile.bak
+
+.cpp.o:
+	$(CXX) $(CXXFLAGS) -o $@ -c $<
 
 depend:
 	makedepend -- $(CPPFLAGS) -- $(SRCS)

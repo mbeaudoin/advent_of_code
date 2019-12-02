@@ -17,9 +17,9 @@ using namespace std;
 template <typename T>
 constexpr int solve_puzzle1(T data)
 {
-    Intcode intcode(data);
+    Intcode computer(data);
 
-    return intcode.evaluate();
+    return computer.evaluate();
 }
 
 // Solve puzzle #2
@@ -38,9 +38,9 @@ constexpr int solve_puzzle2(T data, int targetOutput)
             data[indexNoun] = noun;
             data[indexVerb] = verb;
 
-            Intcode intcode(data);
+            Intcode computer(data);
 
-            if(intcode.evaluate() == targetOutput)
+            if(computer.evaluate() == targetOutput)
             {
                 found = true;
                 retValue = 100*noun + verb;

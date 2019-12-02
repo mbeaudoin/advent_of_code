@@ -13,38 +13,66 @@ template <class T = std::vector<int>>
 class Intcode
 {
 private:
-    T data_;
+
+    // Supported opcodes
+    enum opcodes
+    {
+        ADD  = 1,
+        MULT = 2,
+        HALT = 99
+    };
+
+    // Computer memory
+    T memory_;
 
 public:
-    Intcode (T data)
-    : data_(data)
+    Intcode (T initState)
+    : memory_(initState)
     {
     }
 
+    // Evaluate the current program state
     int evaluate()
     {
-        int currentIndex = 0;
-        int opCode = data_[currentIndex++];
+        int ip = 0;  // Instruction pointer
 
-        while(opCode != 99)
+        int opCode = 0;  // opCode
+
+        while(opCode != HALT)
         {
-            int indexParam1 = data_[currentIndex++];
-            int indexParam2 = data_[currentIndex++];
-            int indexParam3 = data_[currentIndex++];
+            // Next opcode
+            opCode = memory_[ip++];
 
-            if(opCode == 1)  // 1: Addition
+            switch (opCode)
             {
-                data_[indexParam3] = data_[indexParam1] + data_[indexParam2];
-            }
-            else             // 2: multiplication
-            {
-                data_[indexParam3] = data_[indexParam1] * data_[indexParam2];
-            }
+                case ADD:
+                {
+                    int instructParam1 = memory_[ip++];
+                    int instructParam2 = memory_[ip++];
+                    int instructParam3 = memory_[ip++];
+                    memory_[instructParam3] = memory_[instructParam1] + memory_[instructParam2];
+                }
+                break;
 
-            opCode = data_[currentIndex++];
+                case MULT:
+                {
+                    int instructParam1 = memory_[ip++];
+                    int instructParam2 = memory_[ip++];
+                    int instructParam3 = memory_[ip++];
+                    memory_[instructParam3] = memory_[instructParam1] * memory_[instructParam2];
+                }
+                break;
+
+                case HALT:
+                    break;
+
+                default:
+                    std::cout << "Error: unsupported opcode: " << opCode
+                        << ": Aborting." << std::endl;
+            }
         }
 
-            return data_[0];
+        return memory_[0];
     }
 };
 

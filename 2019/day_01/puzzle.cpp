@@ -10,7 +10,7 @@
 #include <numeric>
 #include <math.h>       /* floor */
 
-#include "include/myutils.h"
+#include "myutils.h"
 
 using namespace std;
 

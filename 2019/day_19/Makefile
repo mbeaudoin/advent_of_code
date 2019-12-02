@@ -1,6 +1,6 @@
 # Compilation variables
 CC=g++
-CPPFLAGS= -I..
+CPPFLAGS= -I../include
 CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
 
 # wget command and args to retrieve the day's input data

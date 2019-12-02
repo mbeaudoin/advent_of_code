@@ -17,28 +17,9 @@ using namespace std;
 template <typename T>
 constexpr int solve_puzzle1(T data)
 {
-    int currentIndex = 0;
-    int opCode = data[currentIndex++];
+    Intcode intcode(data);
 
-    while(opCode != 99)
-    {
-        int indexParam1 = data[currentIndex++];
-        int indexParam2 = data[currentIndex++];
-        int indexParam3 = data[currentIndex++];
-
-        if(opCode == 1)  // 1: Addition
-        {
-            data[indexParam3] = data[indexParam1] + data[indexParam2];
-        }
-        else             // 2: multiplication
-        {
-            data[indexParam3] = data[indexParam1] * data[indexParam2];
-        }
-
-        opCode = data[currentIndex++];
-    }
-
-    return data[0];
+    return intcode.evaluate();
 }
 
 // Solve puzzle #2
@@ -50,20 +31,16 @@ constexpr int solve_puzzle2(T data, int targetOutput)
     int retValue = -1;
     bool found = false;
 
-    // Make a copy
-    T origData = data;
-
     for(int noun=0; noun <100 && !found; noun++)
     {
         for(int verb=0; verb <100 && !found; verb++)
         {
-            // Restore data
-            data = origData;
-
             data[indexNoun] = noun;
             data[indexVerb] = verb;
 
-            if(solve_puzzle1(data) == targetOutput)
+            Intcode intcode(data);
+
+            if(intcode.evaluate() == targetOutput)
             {
                 found = true;
                 retValue = 100*noun + verb;

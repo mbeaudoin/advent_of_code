@@ -22,11 +22,13 @@ INPUT_DATAFILE=input.txt
 # Input datafile URL
 AOC_INPUT_URL=https://adventofcode.com/$(AOC_EVENT_YEAR)/day/$(DAY_NUM)/input
 
+SRCS = puzzle.cpp
+
 all: getdata puzzle run
 
-puzzle: puzzle.cpp
+puzzle: $(SRCS)
 	@echo "Compiling puzzle"
-	$(CC) -o puzzle $(CXXFLAGS) puzzle.cpp
+	$(CC) -o puzzle $(CXXFLAGS) $(SRCS)
 
 run: getdata puzzle
 	@echo "Solving puzzle"
@@ -39,3 +41,9 @@ getdata:
 clean:
 	@echo "Cleaning up"
 	rm -f puzzle *~ $(INPUT_DATAFILE)
+
+depend:
+	makedepend -- $(CPPFLAGS) -- $(SRCS)
+# DO NOT DELETE
+
+puzzle.o: ../include/myutils.h

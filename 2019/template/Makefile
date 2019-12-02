@@ -23,10 +23,11 @@ INPUT_DATAFILE=input.txt
 AOC_INPUT_URL=https://adventofcode.com/$(AOC_EVENT_YEAR)/day/$(DAY_NUM)/input
 
 SRCS = puzzle.cpp
+OBJ = $(SRCS:.cpp=.o)
 
 all: getdata puzzle run
 
-puzzle: $(SRCS)
+puzzle: $(OBJS)
 	@echo "Compiling puzzle"
 	$(CC) -o puzzle $(CXXFLAGS) $(SRCS)
 

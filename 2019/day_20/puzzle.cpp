@@ -1,3 +1,9 @@
+//
+// Copyright (C) Martin Beaudoin. 2019. All Rights Reserved.
+//
+// See the repository's LICENSE file for the full license details.
+//
+
 #include <iostream>
 #include <cassert>
 #include <vector>

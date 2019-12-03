@@ -15,7 +15,7 @@ using namespace std;
 
 // Solve puzzle #1
 template <typename T>
-constexpr int solve_puzzle1(T data)
+constexpr int solve_puzzle1(T& data)
 {
     Intcode computer(data);
 
@@ -24,7 +24,7 @@ constexpr int solve_puzzle1(T data)
 
 // Solve puzzle #2
 template <typename T>
-constexpr int solve_puzzle2(T data, int targetOutput)
+constexpr int solve_puzzle2(T& data, int targetOutput)
 {
     int indexNoun = 1;
     int indexVerb = 2;
@@ -73,11 +73,12 @@ int main(int argc, char *argv[])
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
-    assert(solve_puzzle1<vector<int>>({1,9,10,3,2,3,11,0,99,30,40,50}) == 3500 && "Error verifying puzzle #1");
-    assert(solve_puzzle1<vector<int>>({1,0,0,0,99})                    == 2    && "Error verifying puzzle #1");
-    assert(solve_puzzle1<vector<int>>({2,3,0,3,99})                    == 2    && "Error verifying puzzle #1");
-    assert(solve_puzzle1<vector<int>>({2,4,4,5,99,0})                  == 2    && "Error verifying puzzle #1");
-    assert(solve_puzzle1<vector<int>>({1,1,1,4,99,5,6,0,99})           == 30   && "Error verifying puzzle #1");
+    vector<int> v;
+    v = {1,9,10,3,2,3,11,0,99,30,40,50}; assert(solve_puzzle1(v) == 3500 && "Error verifying puzzle #1");
+    v = {1,0,0,0,99};                    assert(solve_puzzle1(v) == 2    && "Error verifying puzzle #1");
+    v = {2,3,0,3,99};                    assert(solve_puzzle1(v) == 2    && "Error verifying puzzle #1");
+    v = {2,4,4,5,99,0};                  assert(solve_puzzle1(v) == 2    && "Error verifying puzzle #1");
+    v = {1,1,1,4,99,5,6,0,99};           assert(solve_puzzle1(v) == 30   && "Error verifying puzzle #1");
 
     // Solve puzzle #1
     data[1] = 12;

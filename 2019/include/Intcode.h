@@ -26,7 +26,7 @@ private:
     T memory_;
 
 public:
-    Intcode (T initState)
+    Intcode (T& initState)
     : memory_(initState)
     {
     }

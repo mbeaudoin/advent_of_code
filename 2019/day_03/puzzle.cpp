@@ -81,7 +81,7 @@ point find_intersection(
 }
 
 // Compute segment endpoints
-int compute_segments_endpoints(string dirWire, polyline& wire)
+void compute_segments_endpoints(string dirWire, polyline& wire)
 {
     // Make sure we start from a clean list
     wire.clear();

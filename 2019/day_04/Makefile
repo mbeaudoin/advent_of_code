@@ -25,15 +25,20 @@ AOC_INPUT_URL=https://adventofcode.com/$(AOC_EVENT_YEAR)/day/$(DAY_NUM)/input
 SRCS = puzzle.cpp
 OBJS = $(SRCS:.cpp=.o)
 
-all: getdata puzzle run
+all: getdata puzzle puzzleSTL run
 
 puzzle: $(OBJS)
 	@echo "Compiling puzzle"
 	$(CXX) -o puzzle $(CXXFLAGS) $(OBJS)
 
-run: getdata puzzle
+puzzleSTL: puzzleSTL.o
+	@echo "Compiling puzzleSTL"
+	$(CXX) -o puzzleSTL $(CXXFLAGS) puzzleSTL.o
+
+run: getdata puzzle puzzleSTL
 	@echo "Solving puzzle"
 	./puzzle $(INPUT_DATAFILE)
+	./puzzleSTL $(INPUT_DATAFILE)
 
 getdata:
 	@echo "Getting data for day # $(DAY_NUM)"
@@ -41,7 +46,7 @@ getdata:
 
 clean:
 	@echo "Cleaning up"
-	rm -f puzzle $(OBJS) *~ $(INPUT_DATAFILE) Makefile.bak
+	rm -f puzzle puzzleSTL *.o *~ $(INPUT_DATAFILE) Makefile.bak
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -o $@ -c $<

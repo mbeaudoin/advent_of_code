@@ -9,20 +9,101 @@
 #include <vector>
 #include "myutils.h"
 
+#include <sstream>
+#include <map>
+
 using namespace std;
+
+typedef map<string, string> Orbit;
+
+template <typename T>
+Orbit constructOrbits(T data)
+{
+    Orbit orbits;
+
+    for(auto d : data)
+    {
+        stringstream ss (d);
+        string item;
+        char delim = ')';
+
+        string object;
+        string orbitsAround;
+
+        while (getline (ss, item, delim))
+        {
+            if(orbitsAround.empty())
+                orbitsAround = item;
+            else
+                object = item;
+        }
+        orbits.insert ( std::pair<string,string>(object,orbitsAround) );
+    }
+    return orbits;
+}
+
 
 // Solve puzzle #1
 template <typename T>
-constexpr int solve_puzzle1(T data)
+int solve_puzzle1(T data)
 {
-    return 42;
+    // Construct orbits map
+    Orbit orbits = constructOrbits(data);
+
+    // Compute total number of direct and indirect orbits
+    int nbrTotOrbits = 0;
+    for(auto orbit = orbits.begin(); orbit != orbits.end(); orbit++)
+    {
+        auto curOrbit = orbit;
+
+        nbrTotOrbits++;
+
+        while(curOrbit->second != "COM")
+        {
+            nbrTotOrbits++;
+            curOrbit = orbits.find(curOrbit->second);
+        }
+    }
+
+    return nbrTotOrbits;
 }
 
 // Solve puzzle #2
 template <typename T>
-constexpr int solve_puzzle2(T data)
+int solve_puzzle2(T data)
 {
-    return 42;
+    // Construct orbits map
+    Orbit orbits = constructOrbits(data);
+
+    // Find current orbit for YOU
+    auto YOU_orbit = orbits.find("YOU");
+    auto SAN_orbit = orbits.find("SAN");
+
+    int YOU_transfers = 0;
+    int SAN_transfers = 0;
+
+    while(YOU_orbit->second != SAN_orbit->second && YOU_orbit->second != "COM")
+    {
+        YOU_orbit = orbits.find(YOU_orbit->second);
+        YOU_transfers++;
+
+        // Go back from SAN_orbit toward COM. If we find a match with YOU_orbit, jackpot!
+        // Otherwise, we change YOU_orbit, and start over.
+        SAN_transfers = 0;
+        SAN_orbit = orbits.find("SAN");
+
+        while(SAN_orbit->second != "COM")
+        {
+            SAN_orbit = orbits.find(SAN_orbit->second);
+            SAN_transfers++;
+
+            if (YOU_orbit->second == SAN_orbit->second)
+            {
+                break;
+            }
+        }
+    }
+    return YOU_transfers + SAN_transfers;
 }
 
 int main(int argc, char *argv[])
@@ -43,20 +124,51 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto data = myutils::read_file<int, std::vector<int> >(filename);
+    auto data = myutils::read_file<string, std::vector<string> >(filename);
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
-    const auto example1 = 1;
-    assert(solve_puzzle1<vector<int>>({example1}) == 42 && "Error verifying puzzle #1");
+    const std::vector<string> v1 =
+    {
+        "COM)B",
+        "B)C",
+        "C)D",
+        "D)E",
+        "E)F",
+        "B)G",
+        "G)H",
+        "D)I",
+        "E)J",
+        "J)K",
+        "K)L"
+        };
+    assert(solve_puzzle1(v1)    ==     42 && "Error verifying puzzle #1");
+    assert(solve_puzzle1(data) == 119831 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
     std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data) << std::endl;
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    const auto example2 = 2;
-    assert(solve_puzzle2<vector<int>>({example2}) == 42 && "Error verifying puzzle #2");
+    const std::vector<string> v2 =
+    {
+        "COM)B",
+        "B)C",
+        "C)D",
+        "D)E",
+        "E)F",
+        "B)G",
+        "G)H",
+        "D)I",
+        "E)J",
+        "J)K",
+        "K)L",
+        "K)YOU",
+        "I)SAN"
+    };
+
+    assert(solve_puzzle2(v2)   ==   4 && "Error verifying puzzle #2");
+    assert(solve_puzzle2(data) == 322 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;

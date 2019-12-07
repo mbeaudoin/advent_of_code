@@ -11,6 +11,7 @@
 
 #include <sstream>
 #include <map>
+#include <set>
 
 using namespace std;
 
@@ -79,6 +80,54 @@ int solve_puzzle2(T data)
     auto YOU_orbit = orbits.find("YOU");
     auto SAN_orbit = orbits.find("SAN");
 
+#if 1
+    // This version is using sets, and set operations: intersection snd difference
+    set<string> pathToYOU;
+    set<string> pathToSAN;
+
+    // Compute path to YOU
+    while(YOU_orbit->second != "COM")
+    {
+        pathToYOU.insert(YOU_orbit->second);
+        YOU_orbit = orbits.find(YOU_orbit->second);
+    }
+
+    // Compute path to SAN
+    while(SAN_orbit->second != "COM")
+    {
+        pathToSAN.insert(SAN_orbit->second);
+        SAN_orbit = orbits.find(SAN_orbit->second);
+    }
+
+    set<string> commonPath;
+    set<string> transferYOU;
+    set<string> transferSAN;
+
+    // Find common path
+    set_intersection(
+        pathToYOU.begin(), pathToYOU.end(),
+        pathToSAN.begin(), pathToSAN.end(),
+        inserter(commonPath, commonPath.begin())
+    );
+
+    // Find exclusive path to YOU
+    set_difference(
+        pathToYOU.begin(), pathToYOU.end(),
+        commonPath.begin(), commonPath.end(),
+        inserter(transferYOU, transferYOU.begin())
+    );
+
+    // Find exclusive path to SAN
+    set_difference(
+        pathToSAN.begin(), pathToSAN.end(),
+        commonPath.begin(), commonPath.end(),
+        inserter(transferSAN, transferSAN.begin())
+    );
+
+    return transferYOU.size() + transferSAN.size();
+
+#else
+    // This version is using iterative backwalks through the orbits map to find a common orbit
     int YOU_transfers = 0;
     int SAN_transfers = 0;
 
@@ -104,6 +153,7 @@ int solve_puzzle2(T data)
         }
     }
     return YOU_transfers + SAN_transfers;
+#endif
 }
 
 int main(int argc, char *argv[])

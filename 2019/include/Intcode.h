@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <bitset>
+#include <stack>
 
 using namespace std;
 
@@ -28,13 +29,20 @@ private:
         JMPFALSE = 6,
         LESS     = 7,
         EQUALS   = 8,
-        HALT     = 99
+        HALT     = 99,
+        FEEDTHEPIPE = 88
     };
 
     enum paramModeValue
     {
         POSITION  = 0,
         IMMEDIATE = 1
+    };
+
+    enum runningState
+    {
+        RUNNING,
+        HALTED
     };
 
     static const int MAX_NBR_PARAM = 3;
@@ -45,14 +53,23 @@ private:
     // Computer memory
     T memory_;
 
+    // Instruction pointer
+    int ip_;
+
     // Current instruction parameter mode
     paramMode paramMode_;
 
     // Input
-    int input_;
+    stack<int> input_;  // Allow multiple inputs
 
     // Last output
     int output_;
+
+    // Pipe mode       We interrupt execution after opcode OUTPUT.
+    bool pipeMode_;
+
+    // Running state
+    runningState runState_;
 
     // Debug mode
     bool debug_;
@@ -83,23 +100,61 @@ private:
 public:
 
     // Constructor
-    Intcode (T& initState, int input, bool debug = false)
+
+    // Single input program
+    Intcode (T& initState,int input, bool debug = false)
         : memory_(initState),
+          ip_(0),
           paramMode_(0),
-          input_(input),
           output_(0),
+          pipeMode_(false),
+          runState_(RUNNING),
           debug_(debug)
     {
+        input_.push(input);
     }
 
-    // Evaluate the current program state
-    int evaluate()
+    // Multiple inputs program
+    Intcode (T& initState, T input, bool debug = false)
+        : memory_(initState),
+          ip_(0),
+          paramMode_(0),
+          output_(0),
+          pipeMode_(false),
+          runState_(RUNNING),
+          debug_(debug)
     {
-        int ip = 0;  // Instruction pointer
+        for(auto i : input)
+            input_.push(i);
+    }
+
+    void setPipeOutputMode(bool pMode)
+    {
+        pipeMode_ = pMode;
+
+        if(debug_)
+            cout << "pipeMode: " << pipeMode_ << endl;
+    }
+
+    void setInput(T input)
+    {
+        for(auto i : input)
+            input_.push(i);
+    }
+
+    bool isHalted()
+    {
+        return runState_ == HALTED;
+    }
+
+    // Run the current program state
+    int run()
+    {
+        int ip = ip_;  // Current instruction pointer
 
         int opCode = 0;  // opCode
 
-        while(opCode != HALT)
+        while(opCode != HALT && opCode != FEEDTHEPIPE)
         {
             // Reset parameter mode to POSITION
             resetParamMode();
@@ -113,7 +168,8 @@ public:
                 opCode = extractParamMode(opCode);
             }
 
-            // cout << "opcode: " << opCode << " - paramMode: " << paramMode_ << endl;
+            if(debug_)
+                cout << "opcode: " << opCode << " - paramMode: " << paramMode_ << endl;
 
             switch (opCode)
             {
@@ -147,9 +203,17 @@ public:
 
                 case INPUT:
                 {
-                    int instructParam1 = memory_[ip++];
-
-                    memory_[instructParam1] = input_;
+                    if(input_.size() > 0)
+                    {
+                        int instructParam1 = memory_[ip++];
+                        memory_[instructParam1] = input_.top();
+                        input_.pop();
+                    }
+                    else
+                    {
+                        // We request some input, but the input stack is empty.
+                        std::cout << "Error:  empty input stack" << std::endl;
+                    }
                 }
                 break;
 
@@ -159,6 +223,15 @@ public:
 
                     // Check param mode
                     output_ = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
+
+                    if(pipeMode_)
+                    {
+                        // Stop current execution
+                        opCode = FEEDTHEPIPE;
+
+                        // Memorize instruction pointer
+                        ip_ = ip;
+                    }
 
                     if(debug_)
                     {
@@ -234,6 +307,7 @@ public:
                 break;
 
                 case HALT:
+                    runState_ = HALTED;
                     break;
 
                 default:

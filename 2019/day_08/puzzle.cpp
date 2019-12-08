@@ -58,12 +58,7 @@ calcNbrPixels(vector<imageLayer> image, int pixValue)
 
     for(auto layer : image)
     {
-        int sum = 0;
-        for(auto p : layer)
-        {
-            if(p == pixValue)
-                sum++;
-        }
+        int sum = count(layer.begin(), layer.end(), pixValue);
         pixNbrPerLayer.push_back(sum);
     }
 

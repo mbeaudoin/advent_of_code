@@ -126,12 +126,11 @@ string solve_puzzle2(T data)
     }
 
     // Render image using dots and spaces
-    cout << endl;
     int k = 0;
     for(int i=0; i<nbpPixPerLayer; i++)
     {
+        cout << (i % imageWidth == 0 ? "\n" : "");
         cout << (renderedImage[k++] == 1 ? "."  : " ");
-        cout << ((i+1) % imageWidth == 0 ? "\n" : "");
     }
     cout << endl;
 

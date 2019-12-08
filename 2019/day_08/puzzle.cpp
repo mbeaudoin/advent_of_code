@@ -101,16 +101,11 @@ string solve_puzzle2(T data)
 
     const int transparentPixel = 2;
 
+#if defined BACKWARD_VERSION
     // Use reverse iterator for handling layers from bottom to top (backward)
     vector<imageLayer>::reverse_iterator rit = image.rbegin();
 
     imageLayer renderedImage = *rit;
-
-#if 0
-    for(auto p : renderedImage)
-        cout << p << ":";
-    cout << endl;
-#endif
 
     // Backward stepping through all layers, handling transparent pixels
     for (; rit!= image.rend(); ++rit)
@@ -124,6 +119,29 @@ string solve_puzzle2(T data)
             }
         }
     }
+
+#else  // Forward version, more efficient since we only analyze transparent pixels
+    int nbrLayers = data[0].size() / (imageWidth*imageHeight);
+    imageLayer renderedImage = image[0];
+
+    // Forward stepping through all layers, handling only transparent pixels
+    for(int p = 0; p<nbpPixPerLayer; p++)
+    {
+        if(renderedImage[p] == transparentPixel)
+        {
+            // Dig down through layers, searching for first not transparent pixel
+            for (int l = 1; l< nbrLayers; l++)
+            {
+                if(image[l][p] != transparentPixel)
+                {
+                    renderedImage[p] = image[l][p];
+                    break;
+                }
+            }
+        }
+    }
+
+#endif
 
     // Render image using dots and spaces
     int k = 0;

@@ -8,21 +8,91 @@
 #include <cassert>
 #include <vector>
 #include "myutils.h"
+#include <sstream>      // std::istringstream
 
 using namespace std;
 
+struct box
+{
+    int x;
+    int y;
+    int z;
+
+    const int surface() const
+    {
+        return 2*x*y + 2*y*z + 2*x*z;
+    }
+
+    const int minSideSurface() const
+    {
+        return std::min(std::min(x*y, y*z), x*z);
+    }
+
+    const int maxSidePerimeter() const
+    {
+        return std::max(std::max(x, y), z);
+    }
+
+    const int totalSidePerimeter() const
+    {
+        return 2*x + 2*y + 2*z;
+    }
+
+    const int volume() const
+    {
+        return x*y*z;
+    }
+};
+
+std::ostream& operator<<(std::ostream& os, const box& b)
+{
+    return os << b.x << "x" << b.y << "x" << b.z << " : " << b.surface() << " : "  << b.minSideSurface();
+}
+
+
 // Solve puzzle #1
 template <typename T>
-constexpr int solve_puzzle1(T data)
+int solve_puzzle1(T data)
 {
-    return 42;
+    int totalArea = 0;
+    for(string d : data)
+    {
+        std::istringstream iss (d);
+
+        box b;
+        char sep;
+
+        iss >> b.x >> sep >> b.y >> sep >> b.z;
+
+        // cout << b << endl;
+        totalArea += b.surface() + b.minSideSurface();
+    }
+
+    return totalArea;
 }
 
 // Solve puzzle #2
 template <typename T>
-constexpr int solve_puzzle2(T data)
+int solve_puzzle2(T data)
 {
-    return 42;
+    int totalLength = 0;
+    for(string d : data)
+    {
+        std::istringstream iss (d);
+
+        box b;
+        char sep;
+
+        iss >> b.x >> sep >> b.y >> sep >> b.z;
+
+        // cout << b << endl;
+
+        totalLength += b.totalSidePerimeter()
+            - 2*b.maxSidePerimeter()
+            + b.volume();
+    }
+
+    return totalLength;
 }
 
 int main(int argc, char *argv[])
@@ -43,20 +113,25 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto data = myutils::read_file<int, std::vector<int> >(filename);
+    auto data = myutils::read_file<string, std::vector<string> >(filename);
+
+#if 0
+    for(string d : data)
+        cout << d << endl;
+    cout << endl;
+#endif
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
     const auto example1 = 1;
-    assert(solve_puzzle1<vector<int>>({example1}) == 42 && "Error verifying puzzle #1");
+    assert(solve_puzzle1(data) == 1588178 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
     std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data) << std::endl;
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    const auto example2 = 2;
-    assert(solve_puzzle2<vector<int>>({example2}) == 42 && "Error verifying puzzle #2");
+    assert(solve_puzzle2(data) == 3783758 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;

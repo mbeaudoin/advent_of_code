@@ -19,7 +19,7 @@ constexpr int solve_puzzle1(T data, int input, bool debug = false)
 {
     Intcode computer(data, input, debug);
 
-    return computer.evaluate();
+    return computer.run();
 }
 
 // Solve puzzle #2
@@ -28,7 +28,7 @@ constexpr int solve_puzzle2(T data, int input, bool debug = false)
 {
     Intcode computer(data, input, debug);
 
-    return computer.evaluate();
+    return computer.run();
 }
 
 int main(int argc, char *argv[])

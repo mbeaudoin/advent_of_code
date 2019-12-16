@@ -5,15 +5,30 @@
 //
 
 #include <vector>
-#include <bitset>
 #include <stack>
+#include <sstream>
+#include <iomanip>
+#include <iostream>
+#include <iterator>
 
 using namespace std;
 
 #ifndef INTCODE_H
 #define INTCODE_H
 
-template <class T = std::vector<int>>
+typedef std::vector<int> paramMode;
+static const int MAX_NBR_PARAM = 3;
+
+std::ostream& operator<<(std::ostream& os, const paramMode& p)
+{
+    for(int i=0; i<MAX_NBR_PARAM; i++)
+    {
+        os << p[MAX_NBR_PARAM - i - 1];
+    }
+    return os;
+}
+
+template <class T = std::vector<long long>>
 class Intcode
 {
 private:
@@ -29,14 +44,23 @@ private:
         JMPFALSE = 6,
         LESS     = 7,
         EQUALS   = 8,
+        RELBASE  = 9,
         HALT     = 99,
         FEEDTHEPIPE = 88
+    };
+
+    enum paramIndex
+    {
+        PARAM1 = 0,
+        PARAM2 = 1,
+        PARAM3 = 2
     };
 
     enum paramModeValue
     {
         POSITION  = 0,
-        IMMEDIATE = 1
+        IMMEDIATE = 1,
+        RELATIVE  = 2
     };
 
     enum runningState
@@ -45,25 +69,24 @@ private:
         HALTED
     };
 
-    static const int MAX_NBR_PARAM = 3;
-    typedef std::bitset<MAX_NBR_PARAM> paramMode;
-
     //- Internal variables
+
+    const int largeMemorySize_ = 20000;
 
     // Computer memory
     T memory_;
 
     // Instruction pointer
-    int ip_;
+    long long ip_;
 
     // Current instruction parameter mode
     paramMode paramMode_;
 
     // Input
-    stack<int> input_;  // Allow multiple inputs
+    stack<long long> input_;  // Allow multiple inputs
 
     // Last output
-    int output_;
+    long long output_;
 
     // Pipe mode       We interrupt execution after opcode OUTPUT.
     bool pipeMode_;
@@ -71,22 +94,32 @@ private:
     // Running state
     runningState runState_;
 
+    // Relative base for relative mode
+    long long relBase_;
+
     // Debug mode
     bool debug_;
 
-    int extractParamMode(int& opCode)
+    long long extractParamMode(long long& opCode)
     {
         int paramModeVal = opCode / 100;
         //std::cout << "opCode: " << opCode << " - paramMode: " << paramModeVal << std::endl;
 
-        // Move info into bitfield
-        paramMode_ = paramMode(to_string(paramModeVal));
+        // Convert paramModeVal into a leading zero string 001
+        std::stringstream ss;
+        ss << std::setw(MAX_NBR_PARAM) << std::setfill('0') << paramModeVal;
+        std::string s = ss.str();
+
+        // Move info into paramMode vector
+        paramMode_[0] = s[2] - '0';
+        paramMode_[1] = s[1] - '0';
+        paramMode_[2] = s[0] - '0';
 
         //cout << "paramMode_: " << paramMode_ << endl;
 
         opCode %= 100;
 
-        //cout << "opCode: " << opCode << endl;
+        // cout << "opCode: " << opCode << endl;
 
         return opCode;
     }
@@ -94,7 +127,45 @@ private:
     // Reset parameter mode to POSITION
     void resetParamMode()
     {
-        paramMode_ = POSITION;
+        paramMode_.clear();
+        for(int i=0; i<MAX_NBR_PARAM; i++)
+            paramMode_.push_back(POSITION);
+    }
+
+    // Extract parameter value base on current paramMode
+    long long extractParamIndex(long long initialParamValue, paramIndex index)
+    {
+        cout << "extractParamIndex: ip_: " << ip_ << endl;
+
+        long long paramIndex = initialParamValue;
+
+        switch(paramMode_[index])
+        {
+            case POSITION:
+            {
+                cout << "Param: " << index << ": POSITION: " << " : memory_[" << initialParamValue << "]" << ": " << memory_[initialParamValue] << endl;
+                // Do nothing, already specify index
+            }
+            break;
+            case IMMEDIATE:
+            {
+                cout << "Param: " << index << ": IMMEDIATE: " << initialParamValue << endl;
+                paramIndex = ip_-1;
+            }
+            break;
+            case RELATIVE:
+            {
+                cout << "Param: " << index << ": RELATIVE: " << initialParamValue <<  ": tot. offset: " << initialParamValue + relBase_ << " : memory_[" << initialParamValue + relBase_ << "]" << ": "<< memory_[initialParamValue + relBase_] << endl;
+                paramIndex = initialParamValue + relBase_;
+            }
+            break;
+            default:
+                cout << "Error: Bad parameter mode: " << paramMode_[index] << endl;
+        }
+
+        //cout << "ParamValue: index: " << index << ": val: " << paramValue << endl;
+
+        return paramIndex;
     }
 
 public:
@@ -102,30 +173,38 @@ public:
     // Constructor
 
     // Single input program
-    Intcode (T& initState,int input, bool debug = false)
+    Intcode (T& initState, long long input, bool debug = false)
         : memory_(initState),
           ip_(0),
-          paramMode_(0),
+          paramMode_(MAX_NBR_PARAM),
           output_(0),
           pipeMode_(false),
           runState_(RUNNING),
+          relBase_(0),
           debug_(debug)
     {
         input_.push(input);
+
+        // Resize for large memory
+        memory_.resize(memory_.size() + largeMemorySize_, 0);
     }
 
     // Multiple inputs program
     Intcode (T& initState, T input, bool debug = false)
         : memory_(initState),
           ip_(0),
-          paramMode_(0),
+          paramMode_(MAX_NBR_PARAM ),
           output_(0),
           pipeMode_(false),
           runState_(RUNNING),
+          relBase_(0),
           debug_(debug)
     {
         for(auto i : input)
             input_.push(i);
+
+        // Resize for large memory
+        memory_.resize(memory_.size() + largeMemorySize_, 0);
     }
 
     void setPipeOutputMode(bool pMode)
@@ -148,11 +227,9 @@ public:
     }
 
     // Run the current program state
-    int run()
+    long long run()
     {
-        int ip = ip_;  // Current instruction pointer
-
-        int opCode = 0;  // opCode
+        long long opCode = 0;  // opCode
 
         while(opCode != HALT && opCode != FEEDTHEPIPE)
         {
@@ -160,7 +237,7 @@ public:
             resetParamMode();
 
             // Next opcode
-            opCode = memory_[ip++];
+            opCode = memory_[ip_++];
 
             if(opCode > 100)
             {
@@ -173,40 +250,37 @@ public:
 
             switch (opCode)
             {
-                case ADD:
+                case ADD:   // 1
                 {
-                    int instructParam1 = memory_[ip++];
-                    int instructParam2 = memory_[ip++];
-                    int instructParam3 = memory_[ip++];
+                    // Extract parameter index
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
+                    long long indexParam3 = extractParamIndex(memory_[ip_++], PARAM3);
 
-                    // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
-
-                    memory_[instructParam3] = value1 + value2;
+                    memory_[indexParam3] = memory_[indexParam1] + memory_[indexParam2];
                 }
                 break;
 
-                case MULT:
+                case MULT:  // 2
                 {
-                    int instructParam1 = memory_[ip++];
-                    int instructParam2 = memory_[ip++];
-                    int instructParam3 = memory_[ip++];
+                    // Extract parameter index
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
+                    long long indexParam3 = extractParamIndex(memory_[ip_++], PARAM3);
 
-                    // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
-
-                    memory_[instructParam3] = value1 * value2;
+                    memory_[indexParam3] = memory_[indexParam1] * memory_[indexParam2];
                 }
                 break;
 
-                case INPUT:
+                case INPUT:  // 3
                 {
                     if(input_.size() > 0)
                     {
-                        int instructParam1 = memory_[ip++];
-                        memory_[instructParam1] = input_.top();
+                        long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+
+                        memory_[indexParam1] = input_.top();
+
+                        cout << "INPUT:: value: " << input_.top() << " at index: " << indexParam1 << endl;
                         input_.pop();
                     }
                     else
@@ -217,12 +291,13 @@ public:
                 }
                 break;
 
-                case OUTPUT:
+                case OUTPUT:  // 4
                 {
-                    int instructParam1 = memory_[ip++];
-
                     // Check param mode
-                    output_ = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+
+                    cout << "OUTPUT: indexParam1: " << indexParam1 << endl;
+                    output_ = memory_[indexParam1];
 
                     if(pipeMode_)
                     {
@@ -230,83 +305,82 @@ public:
                         opCode = FEEDTHEPIPE;
 
                         // Memorize instruction pointer
-                        ip_ = ip;
+                        ip_--;
                     }
 
                     if(debug_)
                     {
-                        std::cout << ">>>>>>>>>>>  Output: "
+                        std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>  Output: "
                         << output_
                         << std::endl;
                     }
                 }
                 break;
 
-                case JMPTRUE:
+                case JMPTRUE:  // 5
                 {
-                    int instructParam1 = memory_[ip];
-                    int instructParam2 = memory_[ip+1];
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
 
-                    // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
-
-                    if(value1 > 0)
+                    if(memory_[indexParam1] > 0)
                     {
-                        ip = value2;
+                        ip_ = memory_[indexParam2];
                     }
-                    else
-                        ip +=2;
+                    //else
+                    //    ip_ +=2;
                 }
                 break;
 
-                case JMPFALSE:
+                case JMPFALSE:  // 6
                 {
-                    int instructParam1 = memory_[ip];
-                    int instructParam2 = memory_[ip+1];
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
 
-                    // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
-
-                    if(value1 == 0)
+                    if(memory_[indexParam1] == 0)
                     {
-                        ip = value2;
+                        ip_ = memory_[indexParam2];
                     }
-                    else
-                        ip +=2;
+                    //else
+                    //    ip_ +=2;
                 }
                 break;
 
-                case LESS:
+                case LESS:   // 7
                 {
-                    int instructParam1 = memory_[ip++];
-                    int instructParam2 = memory_[ip++];
-                    int instructParam3 = memory_[ip++];
+                    // Extract parameter index
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
+                    long long indexParam3 = extractParamIndex(memory_[ip_++], PARAM3);
+
+                    memory_[indexParam3] = (memory_[indexParam1] < memory_[indexParam2]) ? 1 : 0;
+                }
+                break;
+
+                case EQUALS:   // 8
+                {
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+                    long long indexParam2 = extractParamIndex(memory_[ip_++], PARAM2);
+                    long long indexParam3 = extractParamIndex(memory_[ip_++], PARAM3);
+
+                    memory_[indexParam3] = (memory_[indexParam1] == memory_[indexParam2]) ? 1 : 0;
+                }
+                break;
+
+                case RELBASE:   // 9
+                {
+                    cout << "relBase_ old value: " << relBase_ << endl;
 
                     // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
+                    long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
 
-                    memory_[instructParam3] = (value1 < value2) ? 1 : 0;
+                    cout << "indexParam1: " << indexParam1 << endl;
+                    relBase_ += indexParam1;
+
+                    cout << "relBase_ new value: " << relBase_ << endl;
                 }
                 break;
 
-                case EQUALS:
-                {
-                    int instructParam1 = memory_[ip++];
-                    int instructParam2 = memory_[ip++];
-                    int instructParam3 = memory_[ip++];
-
-                    // Check param mode
-                    int value1 = paramMode_[0] == POSITION ? memory_[instructParam1] : instructParam1;
-                    int value2 = paramMode_[1] == POSITION ? memory_[instructParam2] : instructParam2;
-
-                    memory_[instructParam3] = (value1 == value2) ? 1 : 0;
-                }
-                break;
-
-                case HALT:
+                case HALT:   // 99
                     runState_ = HALTED;
                     break;
 
@@ -318,6 +392,13 @@ public:
 
         return output_;
     }
+
+    // Return memory content at index
+    long long pokeMemory(long long index)
+    {
+        return memory_[index];
+    }
 };
+
 
 #endif  // MYUTILS_H

@@ -103,7 +103,6 @@ private:
     long long extractParamMode(long long& opCode)
     {
         int paramModeVal = opCode / 100;
-        //std::cout << "opCode: " << opCode << " - paramMode: " << paramModeVal << std::endl;
 
         // Convert paramModeVal into a leading zero string 001
         std::stringstream ss;
@@ -115,11 +114,7 @@ private:
         paramMode_[1] = s[1] - '0';
         paramMode_[2] = s[0] - '0';
 
-        //cout << "paramMode_: " << paramMode_ << endl;
-
         opCode %= 100;
-
-        // cout << "opCode: " << opCode << endl;
 
         return opCode;
     }
@@ -135,7 +130,8 @@ private:
     // Extract parameter value base on current paramMode
     long long extractParamIndex(long long initialParamValue, paramIndex index)
     {
-        cout << "extractParamIndex: ip_: " << ip_ << endl;
+        if(debug_)
+            cout << "Inside extractParamIndex: ip_: " << ip_ << endl;
 
         long long paramIndex = initialParamValue;
 
@@ -143,27 +139,32 @@ private:
         {
             case POSITION:
             {
-                cout << "Param: " << index << ": POSITION: " << " : memory_[" << initialParamValue << "]" << ": " << memory_[initialParamValue] << endl;
-                // Do nothing, already specify index
+                if(debug_)
+                    cout << "Param: " << index << ": mode : POSITION: " << " : memory_[" << initialParamValue << "]" << ": " << memory_[initialParamValue] << endl;
+                // Do nothing, the parameter already specify the proper index
             }
             break;
             case IMMEDIATE:
             {
-                cout << "Param: " << index << ": IMMEDIATE: " << initialParamValue << endl;
+                if(debug_)
+                    cout << "Param: " << index << ": IMMEDIATE: " << initialParamValue << endl;
+
                 paramIndex = ip_-1;
             }
             break;
             case RELATIVE:
             {
-                cout << "Param: " << index << ": RELATIVE: " << initialParamValue <<  ": tot. offset: " << initialParamValue + relBase_ << " : memory_[" << initialParamValue + relBase_ << "]" << ": "<< memory_[initialParamValue + relBase_] << endl;
+                if(debug_)
+                {
+                    cout << "Param: " << index << ": RELATIVE: " << initialParamValue <<  ": tot. offset: " << initialParamValue + relBase_
+                        << " : memory_[" << initialParamValue + relBase_ << "]" << ": "<< memory_[initialParamValue + relBase_] << endl;
+                }
                 paramIndex = initialParamValue + relBase_;
             }
             break;
             default:
-                cout << "Error: Bad parameter mode: " << paramMode_[index] << endl;
+                cout << "!!!!!!!!!!!!! -> Error: Bad parameter mode: " << paramMode_[index] << endl;
         }
-
-        //cout << "ParamValue: index: " << index << ": val: " << paramValue << endl;
 
         return paramIndex;
     }
@@ -233,6 +234,9 @@ public:
 
         while(opCode != HALT && opCode != FEEDTHEPIPE)
         {
+            if(debug_)
+                cout << "ip_: " << ip_ << " ---- ";
+
             // Reset parameter mode to POSITION
             resetParamMode();
 
@@ -280,7 +284,9 @@ public:
 
                         memory_[indexParam1] = input_.top();
 
-                        cout << "INPUT:: value: " << input_.top() << " at index: " << indexParam1 << endl;
+                        if(debug_)
+                            cout << "INPUT:: value: " << input_.top() << " at index: " << indexParam1 << endl;
+
                         input_.pop();
                     }
                     else
@@ -296,7 +302,9 @@ public:
                     // Check param mode
                     long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
 
-                    cout << "OUTPUT: indexParam1: " << indexParam1 << endl;
+                    if(debug_)
+                        cout << "OUTPUT: indexParam1: " << indexParam1 << endl;
+
                     output_ = memory_[indexParam1];
 
                     if(pipeMode_)
@@ -305,7 +313,7 @@ public:
                         opCode = FEEDTHEPIPE;
 
                         // Memorize instruction pointer
-                        ip_--;
+                        ip_;
                     }
 
                     if(debug_)
@@ -368,15 +376,20 @@ public:
 
                 case RELBASE:   // 9
                 {
-                    cout << "relBase_ old value: " << relBase_ << endl;
 
                     // Check param mode
                     long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
 
-                    cout << "indexParam1: " << indexParam1 << endl;
-                    relBase_ += indexParam1;
+                    if(debug_)
+                    {
+                        cout << "indexParam1: " << indexParam1 << endl;
+                        cout << "relBase_ old value: " << relBase_ << endl;
+                    }
 
-                    cout << "relBase_ new value: " << relBase_ << endl;
+                    relBase_ += memory_[indexParam1];
+
+                    if(debug_)
+                        cout << "relBase_ new value: " << relBase_ << endl;
                 }
                 break;
 

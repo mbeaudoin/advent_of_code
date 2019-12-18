@@ -48,3 +48,6 @@ clean:
 
 depend:
 	makedepend -- $(CPPFLAGS) -- $(SRCS)
+# DO NOT DELETE
+
+puzzle.o: ../include/myutils.h

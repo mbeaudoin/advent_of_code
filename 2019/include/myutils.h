@@ -57,7 +57,7 @@ template <typename T_value = char,
 
         while (std::getline(file, number_as_string, sepValue))
         {
-            buffer.push_back(std::stoi(number_as_string));
+            buffer.push_back(std::stoll(number_as_string));
         }
 
         if(debug)

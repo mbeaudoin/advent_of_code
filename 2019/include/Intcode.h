@@ -312,8 +312,7 @@ public:
                         // Stop current execution
                         opCode = FEEDTHEPIPE;
 
-                        // Memorize instruction pointer
-                        ip_;
+                        // We stop at the current instruction pointer
                     }
 
                     if(debug_)

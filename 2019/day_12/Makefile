@@ -1,6 +1,9 @@
 # Compilation variables
+
+BOOST_INCLUDE=/usr/local/include
+
 CXX=g++
-CPPFLAGS= -I../include
+CPPFLAGS= -I../include -I$(BOOST_INCLUDE)
 CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
 
 # wget command and args to retrieve the day's input data

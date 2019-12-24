@@ -11,6 +11,7 @@
 #include <sstream>
 #include <algorithm>
 #include <numeric>
+#include <iomanip>
 
 #include <boost/functional/hash.hpp>
 
@@ -319,7 +320,7 @@ long long solve_puzzle2(T data)
 
         nbrTimeSteps++;
 
-        if(nbrTimeSteps % 1000000 == 0)
+        if(nbrTimeSteps % 10000000 == 0)
             cout << setw(11) << nbrTimeSteps << endl << std::flush;
     }
     //while(tortoise != hare);

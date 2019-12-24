@@ -26,14 +26,14 @@ typedef enum
 
 typedef struct moonMotion
 {
-    short  x,  y,  z;  // Position
-    short vx, vy, vz;  // Velocity
+    int  x,  y,  z;  // Position
+    int vx, vy, vz;  // Velocity
 
     moonMotion()
         : x(0), y(0), z(0), vx(0), vy(0), vz(0)
         {}
 
-    moonMotion(short mx, short my, short mz, short mvx = 0, short mvy = 0, short mvz = 0)
+    moonMotion(int mx, int my, int mz, int mvx = 0, int mvy = 0, int mvz = 0)
         : x(mx), y(my), z(mz), vx(mvx), vy(mvy), vz(mvz)
         {}
 
@@ -79,7 +79,7 @@ std::ostream& operator<<(std::ostream& os, const moonMotion& mm)
 bool operator !=(const vector<moonMotion>& m1, const vector<moonMotion>& m2)
 {
     bool isSame = true;
-    short vsize = m1.size();
+    int vsize = m1.size();
 
     for(int i=0; isSame && i<vsize; i++)
         isSame &= (m1[i].x  == m2[i].x);
@@ -112,7 +112,7 @@ extractMoonsPos(T data)
 
     vector<moonMotion> moons;
 
-    vector<short> numVals;
+    vector<int> numVals;
     int moonIndex = 0;
     for(auto d : data)
     {
@@ -144,53 +144,26 @@ extractMoonsPos(T data)
 void
 computeGravity(vector<moonMotion>& moons)
 {
+    int delta;
+
     for(int index1 = 0; index1 < moons.size(); index1++)
     {
         moonMotion& m1 = moons[index1];
         for(int index2 = index1+1; index2 < moons.size(); index2++)
         {
             moonMotion& m2 = moons[index2];
-            if (m1.x != m2.x)
-            {
-                if (m1.x < m2.x)
-                {
-                    m1.vx++;
-                    m2.vx--;
-                }
-                else
-                {
-                    m1.vx--;
-                    m2.vx++;
-                }
-            }
 
-            if (m1.y != m2.y)
-            {
-                if (m1.y < m2.y)
-                {
-                    m1.vy++;
-                    m2.vy--;
-                }
-                else
-                {
-                    m1.vy--;
-                    m2.vy++;
-                }
-            }
+            delta = myutils::sgn(m1.x - m2.x);
+            m1.vx -= delta;
+            m2.vx += delta;
 
-            if (m1.z != m2.z)
-            {
-                if (m1.z < m2.z)
-                {
-                    m1.vz++;
-                    m2.vz--;
-                }
-                else
-                {
-                    m1.vz--;
-                    m2.vz++;
-                }
-            }
+            delta = myutils::sgn(m1.y - m2.y);
+            m1.vy -= delta;
+            m2.vy += delta;
+
+            delta = myutils::sgn(m1.z - m2.z);
+            m1.vz -= delta;
+            m2.vz += delta;
         }
     }
 

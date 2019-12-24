@@ -76,13 +76,30 @@ std::ostream& operator<<(std::ostream& os, const moonMotion& mm)
         << "z="      << std::setw(3) << mm.vz << ">";
 }
 
-typedef vector<unsigned long long> listOfTimeSteps;
-
-std::ostream& operator<<(std::ostream& os, const listOfTimeSteps& lts)
+bool operator !=(const vector<moonMotion>& m1, const vector<moonMotion>& m2)
 {
-    for(auto ts : lts)
-        os << ts << ", ";
-    return os;
+    bool isSame = true;
+    short vsize = m1.size();
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].x  == m2[i].x);
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].y  == m2[i].y);
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].z  == m2[i].z);
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].vx  == m2[i].vx);
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].vy  == m2[i].vy);
+
+    for(int i=0; isSame && i<vsize; i++)
+        isSame &= (m1[i].vz  == m2[i].vz);
+
+    return !isSame;
 }
 
 
@@ -282,7 +299,7 @@ long long solve_puzzle2(T data)
     size_t tortoise, hare;     // The 2 pointers from Floyd's algorithm
 
     // Starting point
-    tortoise = computeHashValue(moonsTortoise);
+    //tortoise = computeHashValue(moonsTortoise);
     hare = tortoise;
 
     // First part of Floyd algorithm
@@ -291,39 +308,41 @@ long long solve_puzzle2(T data)
         // Evaluate tortoise
         computeGravity (moonsTortoise);
         computeVelocity(moonsTortoise);
-        tortoise = computeHashValue(moonsTortoise);
+        //tortoise = computeHashValue(moonsTortoise);
 
         // Evaluate hare (goes twice as fast)
         computeGravity (moonsHare);
         computeVelocity(moonsHare);
         computeGravity (moonsHare);
         computeVelocity(moonsHare);
-        hare = computeHashValue(moonsHare);
+        //hare = computeHashValue(moonsHare);
 
         nbrTimeSteps++;
 
         if(nbrTimeSteps % 1000000 == 0)
             cout << setw(11) << nbrTimeSteps << endl << std::flush;
     }
-    while(tortoise != hare);
+    //while(tortoise != hare);
+    while(moonsTortoise != moonsHare);
 
     cout << "First part: found matching hare and tortoise at timestep: " << nbrTimeSteps << endl;
 
     // Second part of Floyd algorithm
     moonsTortoise = moons;
-    tortoise = computeHashValue(moonsTortoise);
+    //tortoise = computeHashValue(moonsTortoise);
 
-    while(tortoise != hare)
+    while(moonsTortoise != moonsHare)
+    //while(tortoise != hare)
     {
         // Evaluate tortoise
         computeGravity (moonsTortoise);
         computeVelocity(moonsTortoise);
-        tortoise = computeHashValue(moonsTortoise);
+        //tortoise = computeHashValue(moonsTortoise);
 
         // Evaluate hare (goes same speed as tortoise)
         computeGravity (moonsHare);
         computeVelocity(moonsHare);
-        hare = computeHashValue(moonsHare);
+        //hare = computeHashValue(moonsHare);
 
         nbrTimeSteps++;
 
@@ -406,7 +425,7 @@ int main(int argc, char *argv[])
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
     assert(solve_puzzle2(dataEx1) ==       2772 && "Error verifying puzzle #2");
-    //assert(solve_puzzle2(dataEx2) == 4686774924 && "Error verifying puzzle #2");
+    assert(solve_puzzle2(dataEx2) == 4686774924 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;

@@ -4,7 +4,7 @@ BOOST_INCLUDE=/usr/local/include
 
 CXX=g++
 CPPFLAGS= -I../include -I$(BOOST_INCLUDE)
-CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
+CXXFLAGS= -std=c++17 -O3 $(CPPFLAGS)
 
 # wget command and args to retrieve the day's input data
 # using the input session cookie from ${HOME}/.aoc_session_cookie

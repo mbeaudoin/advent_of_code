@@ -144,9 +144,6 @@ extractMoonsPos(T data)
 void
 computeGravity(vector<moonMotion>& moons)
 {
-    // Compute delta gravity from current position
-    vector<moonMotion> deltaGravity(moons.size());
-
     for(int index1 = 0; index1 < moons.size(); index1++)
     {
         moonMotion& m1 = moons[index1];

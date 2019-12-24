@@ -300,7 +300,7 @@ long long solve_puzzle2(T data)
 
     // Starting point
     //tortoise = computeHashValue(moonsTortoise);
-    hare = tortoise;
+    //hare = tortoise;
 
     // First part of Floyd algorithm
     do

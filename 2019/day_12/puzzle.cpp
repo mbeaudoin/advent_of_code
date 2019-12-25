@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <numeric>
 #include <iomanip>
-#include <time.h>       /* clock_t, clock, CLOCKS_PER_SEC */
 
 using namespace std;
 
@@ -194,14 +193,7 @@ computeEnergy(vector<moonMotion>& moons)
         kinEnergy = abs(m.vx) + abs(m.vy) + abs(m.vz);
 
         totEnergy += potEnergy * kinEnergy;
-
-        cout << "pot: " << std::setw(3) << potEnergy
-            << " : kin: " << std::setw(3) << kinEnergy
-            << " tot: " << std::setw(3) << potEnergy * kinEnergy << endl;
     }
-
-    cout << "---------> Sum of total energy: " << totEnergy << endl;
-
     return totEnergy;
 }
 
@@ -212,20 +204,10 @@ long solve_puzzle1(T data, int nbrTimeSteps)
     vector<moonMotion> moons = extractMoonsPos(data);
     long totalEnergy = 0;
 
-    // Do the motions
-    cout << "After 0  steps:" << endl;
-    for(auto m : moons)
-        cout << m << endl;
-
     for(int t=1; t<=nbrTimeSteps; t++)
     {
         computeGravity (moons);
         computeVelocity(moons);
-
-        cout << "After " << t << " steps:" << endl;
-        for(auto m : moons)
-            cout << m << endl;
-
         totalEnergy = computeEnergy(moons);
     }
 
@@ -239,10 +221,7 @@ void floyd_cycle_find(
     long long& mu                   // Index of first encounter
 )
 {
-    clock_t t = clock();
-
     long long nbrTimeSteps = 0;
-    long nbrEvals = 0;
 
     // Starting point
     vector<moonMotion> moonsTurtle = moons;
@@ -253,24 +232,17 @@ void floyd_cycle_find(
     {
         // Evaluate turtle
         computeGravity (moonsTurtle);
-        computeVelocity(moonsTurtle);     nbrEvals++;
+        computeVelocity(moonsTurtle);
 
         // Evaluate hare (goes twice as fast)
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);       nbrEvals++;
+        computeVelocity(moonsHare);
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);       nbrEvals++;
+        computeVelocity(moonsHare);
 
         nbrTimeSteps++;
-
-        if(nbrTimeSteps % 100000000 == 0)
-        {
-            cout << setw(11) << nbrTimeSteps << " : " << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
-        }
     }
     while(moonsTurtle != moonsHare);
-
-    cout << "First part: found matching hare and turtle at timestep: " << nbrTimeSteps << endl;
 
     moonsTurtle = moons;
 
@@ -287,16 +259,9 @@ void floyd_cycle_find(
 
         mu++;
         nbrTimeSteps++;
-
-        if(nbrTimeSteps % 1000000 == 0)
-            cout << setw(11) << nbrTimeSteps << endl << std::flush;
     }
 
-    t = clock() - t;
-
     lambda = nbrTimeSteps - mu;
-
-    cout << "Floyd: found matching hare and turtle at timestep: " << mu + lambda << " : compute time: " << std::setprecision(5) << ((float)t)/CLOCKS_PER_SEC << endl;
 
     return;
 }
@@ -309,10 +274,6 @@ void brent_cycle_find(
     long long& mu                   // Index of first encounter
 )
 {
-    clock_t t = clock();
-
-    long nbrEvals = 0;
-
     // Starting point
     long long power;
     power  = 1;
@@ -323,7 +284,7 @@ void brent_cycle_find(
 
     // Evaluate hare
     computeGravity (moonsHare);
-    computeVelocity(moonsHare);       nbrEvals++;
+    computeVelocity(moonsHare);
 
     while(moonsTurtle != moonsHare)
     {
@@ -335,54 +296,24 @@ void brent_cycle_find(
         }
 
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);       nbrEvals++;
+        computeVelocity(moonsHare);
         lambda++;
-
-        if(nbrEvals % 100000000 == 0)
-        {
-            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
-        }
-
     }
 
     moonsTurtle = moons;
     moonsHare = moons;
 
-#if 0    // Not needed. Lambda is already computed, and hare is properly located
-    for(int i=0; i<lambda; i++)
-    {
-        computeGravity (moonsHare);
-        computeVelocity(moonsHare);       nbrEvals++;
-
-        if(nbrEvals % 100000000 == 0)
-        {
-            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
-        }
-    }
-#endif
     mu = 0;
 
     while(moonsTurtle != moonsHare)
     {
         computeGravity (moonsTurtle);
-        computeVelocity(moonsTurtle);       nbrEvals++;
+        computeVelocity(moonsTurtle);
 
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);       nbrEvals++;
+        computeVelocity(moonsHare);
         mu++;
-
-        if(nbrEvals % 100000000 == 0)
-        {
-            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
-        }
-
     }
-
-    t = clock() - t;
-
-    cout << "Brent: found matching hare and turtle at timestep: " << mu + lambda << " : compute time: " << std::setprecision(5) << ((float)t)/CLOCKS_PER_SEC << endl;
-
-
     return;
 }
 
@@ -394,22 +325,48 @@ void brent_cycle_find(
 template <typename T>
 long long solve_puzzle2(T data)
 {
-    long long lambda;   // Loop length
-    long long mu;       // Index of first encounter
+    long long lambdaX, lambdaY, lambdaZ;   // Loop length
+    long long muX, muY, muZ;               // Index of first encounter
 
     // First, we compute the initial state of each moon
     vector<moonMotion> moons = extractMoonsPos(data);
 
-#if 1
+    // x, y and z coords are moving independantly, so compute the frequencies of each coordinates
+    vector<moonMotion> moonsX = moons;
+    vector<moonMotion> moonsY = moons;
+    vector<moonMotion> moonsZ = moons;
+
+    for(auto &m : moonsX)
+    {
+        m.y = 0;
+        m.z = 0;
+        m.vy = 0;
+        m.vz = 0;
+    }
+
+    for(auto &m : moonsY)
+    {
+        m.x = 0;
+        m.z = 0;
+        m.vx = 0;
+        m.vz = 0;
+    }
+
+    for(auto &m : moonsZ)
+    {
+        m.x = 0;
+        m.y = 0;
+        m.vx = 0;
+        m.vy = 0;
+    }
+
     cout << "Solving puzzle #2 using Floyd algorithm" << endl;
-    floyd_cycle_find(moons, lambda, mu);
-    cout << "Floyd: found match after " << lambda + mu << " iterations" << endl;
-#else
-    cout << "Solving puzzle #2 using Brent algorithm" << endl;
-    brent_cycle_find(moons, lambda, mu);
-    cout << "Brent: found match after " << lambda + mu << " iterations" << endl;
-#endif
-    return lambda + mu;
+    floyd_cycle_find(moonsX, lambdaX, muX);
+    floyd_cycle_find(moonsY, lambdaY, muY);
+    floyd_cycle_find(moonsZ, lambdaZ, muZ);
+
+    // The full period is the lcm of the 3 lambdas
+    return lcm(lambdaX, lcm(lambdaY, lambdaZ));
 }
 
 int main(int argc, char *argv[])
@@ -475,7 +432,6 @@ int main(int argc, char *argv[])
     // Solve puzzle #1
     nTimeSteps = 1000;
     assert(solve_puzzle1(data, nTimeSteps) == 10635 && "Error verifying puzzle #1");
-
     std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data, nTimeSteps) << std::endl;
 
     // --------- Puzzle #2 ---------
@@ -484,5 +440,6 @@ int main(int argc, char *argv[])
     assert(solve_puzzle2(dataEx2) == 4686774924 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
+    assert(solve_puzzle2(data) == 583523031727256 && "Error verifying puzzle #2");
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;
 }

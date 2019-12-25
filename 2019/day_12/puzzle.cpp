@@ -232,61 +232,60 @@ long solve_puzzle1(T data, int nbrTimeSteps)
     return totalEnergy;
 }
 
-// Solve puzzle #2
-//
-// This is solved using the Floyd algorithm for finding cycles in a sequence.
-// https://en.wikipedia.org/wiki/Cycle_detection#Floyd's_Tortoise_and_Hare
-//
-template <typename T>
-long long solve_puzzle2(T data)
+// Floyd algorithm for finding cycle.
+void floyd_cycle_find(
+    vector<moonMotion>& moons,
+    long long& lambda,              // Loop length
+    long long& mu                   // Index of first encounter
+)
 {
-    cout << "Solving puzzle #2" << endl;
-
     clock_t t = clock();
 
     long long nbrTimeSteps = 0;
-
-    // First, we compute the initial state of each moon
-    vector<moonMotion> moons = extractMoonsPos(data);
+    long nbrEvals = 0;
 
     // Starting point
-    vector<moonMotion> moonsTortoise = moons;
+    vector<moonMotion> moonsTurtle = moons;
     vector<moonMotion> moonsHare = moons;
 
     // First part of Floyd algorithm
     do
     {
-        // Evaluate tortoise
-        computeGravity (moonsTortoise);
-        computeVelocity(moonsTortoise);
+        // Evaluate turtle
+        computeGravity (moonsTurtle);
+        computeVelocity(moonsTurtle);     nbrEvals++;
 
         // Evaluate hare (goes twice as fast)
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);
+        computeVelocity(moonsHare);       nbrEvals++;
         computeGravity (moonsHare);
-        computeVelocity(moonsHare);
+        computeVelocity(moonsHare);       nbrEvals++;
 
         nbrTimeSteps++;
 
-        if(nbrTimeSteps % 10000000 == 0)
-            cout << setw(11) << nbrTimeSteps << endl << std::flush;
+        if(nbrTimeSteps % 100000000 == 0)
+        {
+            cout << setw(11) << nbrTimeSteps << " : " << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
+        }
     }
-    while(moonsTortoise != moonsHare);
+    while(moonsTurtle != moonsHare);
 
-    cout << "First part: found matching hare and tortoise at timestep: " << nbrTimeSteps << endl;
+    cout << "First part: found matching hare and turtle at timestep: " << nbrTimeSteps << endl;
 
-    moonsTortoise = moons;
+    moonsTurtle = moons;
 
-    while(moonsTortoise != moonsHare)
+    mu = 0;
+    while(moonsTurtle != moonsHare)
     {
-        // Evaluate tortoise
-        computeGravity (moonsTortoise);
-        computeVelocity(moonsTortoise);
+        // Evaluate turtle
+        computeGravity (moonsTurtle);
+        computeVelocity(moonsTurtle);
 
-        // Evaluate hare (goes same speed as tortoise)
+        // Evaluate hare (goes same speed as turtle)
         computeGravity (moonsHare);
         computeVelocity(moonsHare);
 
+        mu++;
         nbrTimeSteps++;
 
         if(nbrTimeSteps % 1000000 == 0)
@@ -295,10 +294,122 @@ long long solve_puzzle2(T data)
 
     t = clock() - t;
 
-    cout << "Second part: found matching hare and tortoise at timestep: " << nbrTimeSteps << "compute time: " << ((float)t)/CLOCKS_PER_SEC << endl;
+    lambda = nbrTimeSteps - mu;
+
+    cout << "Floyd: found matching hare and turtle at timestep: " << mu + lambda << " : compute time: " << std::setprecision(5) << ((float)t)/CLOCKS_PER_SEC << endl;
+
+    return;
+}
+
+// Brent algorithm for finding cycle.
+// For this specific problem, this variant of the algorithm is not faster than Floyd algorithm
+void brent_cycle_find(
+    vector<moonMotion>& moons,
+    long long& lambda,              // Loop length
+    long long& mu                   // Index of first encounter
+)
+{
+    clock_t t = clock();
+
+    long nbrEvals = 0;
+
+    // Starting point
+    long long power;
+    power  = 1;
+    lambda = 1;
+
+    vector<moonMotion> moonsTurtle = moons;
+    vector<moonMotion> moonsHare = moons;
+
+    // Evaluate hare
+    computeGravity (moonsHare);
+    computeVelocity(moonsHare);       nbrEvals++;
+
+    while(moonsTurtle != moonsHare)
+    {
+        if(power == lambda)
+        {
+            moonsTurtle = moonsHare;
+            power *= 2;
+            lambda = 0;
+        }
+
+        computeGravity (moonsHare);
+        computeVelocity(moonsHare);       nbrEvals++;
+        lambda++;
+
+        if(nbrEvals % 100000000 == 0)
+        {
+            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
+        }
+
+    }
+
+    moonsTurtle = moons;
+    moonsHare = moons;
+
+#if 0    // Not needed. Lambda is already computed, and hare is properly located
+    for(int i=0; i<lambda; i++)
+    {
+        computeGravity (moonsHare);
+        computeVelocity(moonsHare);       nbrEvals++;
+
+        if(nbrEvals % 100000000 == 0)
+        {
+            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
+        }
+    }
+#endif
+    mu = 0;
+
+    while(moonsTurtle != moonsHare)
+    {
+        computeGravity (moonsTurtle);
+        computeVelocity(moonsTurtle);       nbrEvals++;
+
+        computeGravity (moonsHare);
+        computeVelocity(moonsHare);       nbrEvals++;
+        mu++;
+
+        if(nbrEvals % 100000000 == 0)
+        {
+            cout  << std::setprecision(2) << setw(10) << (float)nbrEvals / ((clock() -t)/CLOCKS_PER_SEC) << " evals/s" << endl << std::flush;
+        }
+
+    }
+
+    t = clock() - t;
+
+    cout << "Brent: found matching hare and turtle at timestep: " << mu + lambda << " : compute time: " << std::setprecision(5) << ((float)t)/CLOCKS_PER_SEC << endl;
 
 
-    return nbrTimeSteps;
+    return;
+}
+
+// Solve puzzle #2
+//
+// This is solved using the Floyd algorithm for finding cycles in a sequence.
+// https://en.wikipedia.org/wiki/Cycle_detection#Floyd's_Tortoise_and_Hare
+//
+template <typename T>
+long long solve_puzzle2(T data)
+{
+    long long lambda;   // Loop length
+    long long mu;       // Index of first encounter
+
+    // First, we compute the initial state of each moon
+    vector<moonMotion> moons = extractMoonsPos(data);
+
+#if 1
+    cout << "Solving puzzle #2 using Floyd algorithm" << endl;
+    floyd_cycle_find(moons, lambda, mu);
+    cout << "Floyd: found match after " << lambda + mu << " iterations" << endl;
+#else
+    cout << "Solving puzzle #2 using Brent algorithm" << endl;
+    brent_cycle_find(moons, lambda, mu);
+    cout << "Brent: found match after " << lambda + mu << " iterations" << endl;
+#endif
+    return lambda + mu;
 }
 
 int main(int argc, char *argv[])

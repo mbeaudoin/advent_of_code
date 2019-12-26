@@ -11,6 +11,9 @@
 #include <map>
 
 #include "Intcode.h"
+#include <curses.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
 
@@ -23,6 +26,8 @@ typedef enum
     TILE_BALL   = 4
 } tileType;
 
+// For screen rendering
+map<int, char> pixValue;
 
 // Solve puzzle #1
 template <typename T>
@@ -76,6 +81,13 @@ long long solve_puzzle1(T data, int& xmin, int& xmax, int& ymin, int& ymax, bool
         cout << "xmin: " << xmin << endl;
         cout << "ymin: " << ymin << endl;
 
+        // Initialise pixel value for ASCII rendering
+        pixValue[TILE_EMPTY]  = ' ';
+        pixValue[TILE_WALL]   = '#';
+        pixValue[TILE_BLOCK]  = '*';
+        pixValue[TILE_PADDLE] = '=';
+        pixValue[TILE_BALL]   = 'O';
+
         int widthScreen = xmax - xmin + 1;
         map<long, string> screenStr;
 
@@ -90,7 +102,7 @@ long long solve_puzzle1(T data, int& xmin, int& xmax, int& ymin, int& ymax, bool
             x = index % 100;
             y = index / 100;
             strcpy(buffer, screenStr[y].c_str());
-            buffer[x] = pix.second + '0';
+            buffer[x] = pixValue[pix.second];
 
             screenStr[y] = string(buffer);
         }
@@ -104,39 +116,23 @@ long long solve_puzzle1(T data, int& xmin, int& xmax, int& ymin, int& ymax, bool
     return counterTile2;
 }
 
-void refreshScreen(map<long, vector<int>>& screen, int x, int y, int newTile, bool debug)
+void refreshScreen(map<long, vector<int>>& screen, int x, int y, int newTile, WINDOW* win,bool debug)
 {
-    map<int, char> pixValue;
-    pixValue[TILE_EMPTY]  = ' ';
-    pixValue[TILE_WALL]   = '#';
-    pixValue[TILE_BLOCK]  = '*';
-    pixValue[TILE_PADDLE] = '=';
-    pixValue[TILE_BALL]   = 'O';
-
     if(x == -1)
-        screen[x][0] = newTile;
-    else
-        screen[y][x] = newTile;
-
-    if(debug)
     {
-        cout << endl;
-        for(auto& line : screen)
-        {
-            cout << setw(2) << line.first << ": ";
-
-            if(line.first == -1)
-                cout << line.second[0];
-            else
-            {
-                for(auto p : line.second)
-                {
-                    cout << pixValue[p];
-                }
-            }
-            cout << endl;
-        }
+        screen[x][0] = newTile;
+        wmove(win, 0, 0);
+        waddstr(win, (string("Score: ") + to_string(newTile)).c_str());
     }
+    else
+    {
+        screen[y][x] = newTile;
+        mvwaddch(win, y+2, x+1, pixValue[newTile]);
+    }
+
+    wrefresh(win);
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
     return;
 }
 
@@ -198,14 +194,32 @@ long long solve_puzzle2(T data, int& xmin, int& xmax, int& ymin, int& ymax, bool
     computer.setInputCallbackParam(&screen);
     computer.setInputCallback(updatePaddlePos);
 
+    // Initialise pixel value for ASCII rendering
+    pixValue[TILE_EMPTY]  = ' ';
+    pixValue[TILE_WALL]   = '#';
+    pixValue[TILE_BLOCK]  = '*';
+    pixValue[TILE_PADDLE] = '=';
+    pixValue[TILE_BALL]   = 'O';
+
+    // Init a curses window for ASCII rendering
+    initscr();
+    start_color();
+    WINDOW *win = newwin(ymax - ymin + 3, xmax - xmin + 3, 2, 2);
+    wborder(win, 0, 0, 0, 0, 0, 0, 0, 0);
+    curs_set(0);
+
+    // Let's paddle
     while(!computer.isHalted())
     {
         int x       = computer.run();
         int y       = computer.run();
         int newTile = computer.run();
 
-        refreshScreen(screen, x, y, newTile, debug);
+        refreshScreen(screen, x, y, newTile, win, debug);
     }
+
+    // Terminate curses
+    endwin();
 
     // Return the final score
     return screen[-1][0];
@@ -244,6 +258,7 @@ int main(int argc, char *argv[])
     assert(solve_puzzle2(data, xmin, xmax, ymin, ymax, true) == 10776 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
-    std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data, xmin, xmax, ymin, ymax) << std::endl;
+    int sol2 = solve_puzzle2(data, xmin, xmax, ymin, ymax);
+    std::cout << "Answer for puzzle #2: "<< sol2 << endl;
 
 }

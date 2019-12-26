@@ -2,6 +2,7 @@
 CXX=g++
 CPPFLAGS= -I../include
 CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
+LIBS=-lcrypto
 
 # wget command and args to retrieve the day's input data
 # using the input session cookie from ${HOME}/.aoc_session_cookie
@@ -29,7 +30,7 @@ all: getdata puzzle run
 
 puzzle: $(OBJS)
 	@echo "Compiling puzzle"
-	$(CXX) -o puzzle $(CXXFLAGS) $(OBJS)
+	$(CXX) -o puzzle $(CXXFLAGS) $(OBJS) $(LDFLAGS) $(LIBS)
 
 run: getdata puzzle
 	@echo "Solving puzzle"

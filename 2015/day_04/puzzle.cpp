@@ -9,12 +9,27 @@
 #include <vector>
 #include "myutils.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <openssl/md5.h>
+
 using namespace std;
 
 // Solve puzzle #1
 template <typename T>
-constexpr int solve_puzzle1(T data)
+int solve_puzzle1(T data)
 {
+    typedef std::basic_string<unsigned char> ustring;
+
+    // ustring d = data;
+    unsigned char d [] = "pqrstuv1048970";
+    unsigned char md[1024];
+
+    //d = u"asdfsdfsdf";
+
+    MD5(d);
+
+    cout << "md: " << md << endl;
     return 42;
 }
 
@@ -43,15 +58,15 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto data = myutils::read_file<int, std::vector<int> >(filename);
+    auto data = myutils::read_file<string, std::vector<string> >(filename);
 
+    cout << data[0] << endl;
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
-    const auto example1 = 1;
-    assert(solve_puzzle1<vector<int>>({example1}) == 42 && "Error verifying puzzle #1");
+    assert(solve_puzzle1(data[0]) == 42 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
-    std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data) << std::endl;
+    std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data[0]) << std::endl;
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples

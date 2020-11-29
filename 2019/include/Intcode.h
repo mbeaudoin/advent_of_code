@@ -28,7 +28,7 @@ std::ostream& operator<<(std::ostream& os, const paramMode& p)
     return os;
 }
 
-template <class T = std::vector<long long>>
+template <class T = std::vector<long long>, class C = int>
 class Intcode
 {
 private:
@@ -96,6 +96,15 @@ private:
 
     // Relative base for relative mode
     long long relBase_;
+
+    // Input callBack function pointer:
+    // Inpput: template type C* (pointer to parameter)
+    // Output: long long value
+    typedef long long (*CallbackType)(C*);
+    CallbackType inputCallback_;
+
+    // Pointer to inputCallback_ function parameter
+    C* inputCallback_Param_;
 
     // Debug mode
     bool debug_;
@@ -182,6 +191,8 @@ public:
           pipeMode_(false),
           runState_(RUNNING),
           relBase_(0),
+          inputCallback_(NULL),
+          inputCallback_Param_(NULL),
           debug_(debug)
     {
         input_.push(input);
@@ -199,6 +210,8 @@ public:
           pipeMode_(false),
           runState_(RUNNING),
           relBase_(0),
+          inputCallback_(NULL),
+          inputCallback_Param_(NULL),
           debug_(debug)
     {
         for(auto i : input)
@@ -288,6 +301,13 @@ public:
                             cout << "INPUT:: value: " << input_.top() << " at index: " << indexParam1 << endl;
 
                         input_.pop();
+                    }
+                    else if(inputCallback_ != NULL)
+                    {
+                        long long indexParam1 = extractParamIndex(memory_[ip_++], PARAM1);
+
+                        memory_[indexParam1] = inputCallback_(inputCallback_Param_);
+
                     }
                     else
                     {
@@ -409,6 +429,24 @@ public:
     long long pokeMemory(long long index)
     {
         return memory_[index];
+    }
+
+    // Set memory index to value
+    void setMemory(long long index, long long value)
+    {
+        memory_[index] = value;
+    }
+
+    // Set inputCallback
+    void setInputCallback(CallbackType f)
+    {
+        inputCallback_ = f;
+    }
+
+    // Set inputCallbackParameter
+    void setInputCallbackParam(C* p)
+    {
+        inputCallback_Param_ = p;
     }
 };
 

@@ -29,7 +29,6 @@ auto read_file(const std::string filename, bool keepSpaces=false, const bool deb
 
         if(keepSpaces)
         {
-#if 0
             while(file.good())
             {
                 std::string line;
@@ -37,7 +36,6 @@ auto read_file(const std::string filename, bool keepSpaces=false, const bool deb
                 if(line.size() > 0)
                     buffer.push_back(line);
             }
-#endif
         }
         else
         {

@@ -36,7 +36,6 @@ run: getdata puzzle
 	./puzzle $(INPUT_DATAFILE)
 
 getdata:
-	cp ../template/template_main.cpp ./puzzle.cpp
 	@echo "Getting data for day # $(DAY_NUM)"
 	test -f $(INPUT_DATAFILE) || $(WGET) $(WGET_ARGS) -O $(INPUT_DATAFILE) $(AOC_INPUT_URL)
 clean:

@@ -78,7 +78,8 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto data = myutils::read_file<string, std::vector<string> >(filename, true);
+    std::vector<std::string> data;
+    myutils::read_file(data, filename, true, false);
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples

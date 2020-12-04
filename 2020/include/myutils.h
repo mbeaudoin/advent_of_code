@@ -21,30 +21,21 @@ namespace myutils
 
 template <typename T_value = char,
           typename T_container = std::vector<T_value>>
-auto read_file(const std::string filename, bool keepSpaces=false, const bool debug=false)
+int
+read_file(
+    T_container& buffer,
+    const std::string filename,
+    const bool keepSpaces=false,
+    const bool debug=false
+)
     {
-        T_container buffer;
-
         std::ifstream file(filename);
 
-        if(keepSpaces)
-        {
-            while(file.good())
-            {
-                std::string line;
-                getline(file, line);
-                if(line.size() > 0)
-                    buffer.push_back(line);
-            }
-        }
-        else
-        {
-            std::copy(
-                std::istream_iterator<T_value>(file),
-                std::istream_iterator<T_value>(),
-                std::back_inserter(buffer)
-            );
-        }
+        std::copy(
+            std::istream_iterator<T_value>(file),
+            std::istream_iterator<T_value>(),
+            std::back_inserter(buffer)
+        );
 
         if(debug)
         {
@@ -54,7 +45,7 @@ auto read_file(const std::string filename, bool keepSpaces=false, const bool deb
                 std::cout << val << std::endl;
         }
 
-        return buffer;
+        return 0;
     }
 
 
@@ -160,4 +151,47 @@ template <typename T_value = char,
         return (T(0) < val) - (val < T(0));
     }
 }
+
+// Specialized template
+template <>
+int
+myutils::read_file(
+    std::vector<std::string>& buffer,
+    const std::string filename,
+    const bool keepSpaces,
+    const bool debug
+)
+{
+    std::ifstream file(filename);
+
+    if(keepSpaces)
+    {
+        while(file.good())
+        {
+            std::string line;
+            getline(file, line);
+            if(line.size() > 0)
+                buffer.push_back(line);
+        }
+    }
+    else
+    {
+        std::copy(
+            std::istream_iterator<std::string>(file),
+            std::istream_iterator<std::string>(),
+            std::back_inserter(buffer)
+        );
+    }
+
+    if(debug)
+    {
+        std::cout << "Buffer len: " << buffer.size() << std::endl;
+
+        for (auto& val : buffer)
+            std::cout << val << std::endl;
+    }
+
+    return 0;
+}
+
 #endif  // MYUTILS_H

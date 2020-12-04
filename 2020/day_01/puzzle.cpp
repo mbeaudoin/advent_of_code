@@ -55,7 +55,8 @@ int main(int argc, char *argv[])
     }
 
     // Reading the data
-    auto data = myutils::read_file<int, std::vector<int> >(filename);
+    std::vector<int> data;
+    myutils::read_file<int, std::vector<int> >(data, filename);
 
     const auto example = { 1721, 979, 366, 299, 675, 1456};
 

@@ -19,8 +19,6 @@ int solve_puzzle1(T data)
     int totalYesAnswers = 0;
     set<int> group;
 
-    data.push_back("");
-
     for(auto d: data)
     {
         if(!d.empty())
@@ -50,8 +48,6 @@ int solve_puzzle2(T data)
     int groupSize = 0;
     int totalYesAnswers = 0;
 
-    data.push_back("");
-
     for(auto d: data)
     {
         if(!d.empty())
@@ -70,7 +66,7 @@ int solve_puzzle2(T data)
             // Tally votes from this group
             for(auto v : histo)
             {
-                if(groupSize && v == groupSize) // number of votes == groupSize
+                if(v == groupSize) // number of votes == groupSize
                     totalYesAnswers++;
             }
 
@@ -81,6 +77,94 @@ int solve_puzzle2(T data)
         }
     }
 
+    return totalYesAnswers;
+}
+
+// Solve puzzle #2
+template <typename T>
+int solve_puzzle2_usingSets(T data)
+{
+    int totalYesAnswers = 0;
+
+    // We use sets and intersections
+    std::vector<string> groupVotes;
+
+    for(auto d: data)
+    {
+        if(!d.empty())
+        {
+            sort(d.begin(), d.end());
+            groupVotes.push_back(d);
+        }
+        else if(groupVotes.size() > 0)
+        {
+            string intersection;
+            string::iterator it;
+
+            intersection.resize(26);
+
+            intersection = groupVotes[0];
+
+            for(int i=1; i<groupVotes.size(); i++)
+            {
+                it = std::set_intersection(
+                    groupVotes[i].begin(),
+                    groupVotes[i].end(),
+                    intersection.begin(),
+                    intersection.end(),
+                    intersection.begin());
+
+                intersection.resize(it-intersection.begin());
+            }
+
+            totalYesAnswers += intersection.size();
+            groupVotes.clear();
+        }
+    }
+
+    return totalYesAnswers;
+}
+
+template <typename T>
+int solve_puzzle2_usingSetsCleaner(T data)
+{
+    int totalYesAnswers = 0;
+
+    // We use sets and intersections, using data inplace
+    string intersection;
+
+    bool newGroup = true;
+
+    for(auto d: data)
+    {
+        if(!d.empty())
+        {
+            // set_intersection need sorted arrays
+            sort(d.begin(), d.end());
+
+            if(newGroup)
+            {
+                intersection = d;
+                newGroup ^= true;
+            }
+            else
+            {
+                string::iterator it = std::set_intersection(
+                    d.begin(),
+                    d.end(),
+                    intersection.begin(),
+                    intersection.end(),
+                    intersection.begin());
+
+                intersection.resize(it-intersection.begin());
+            }
+        }
+        else
+        {
+            totalYesAnswers += intersection.size();
+            newGroup ^= true;
+        }
+    }
     return totalYesAnswers;
 }
 
@@ -122,7 +206,8 @@ int main(int argc, char *argv[])
         "a",
         "a",
         "",
-        "b"
+        "b",
+        ""
     };
 
     assert(solve_puzzle1<vector<string>>(example1) == 11 && "Error verifying puzzle #1");
@@ -136,4 +221,18 @@ int main(int argc, char *argv[])
 
     // Solve puzzle #2
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;
+
+    // Verify puzzle2 examples using sets and intersections
+    assert(solve_puzzle2_usingSets<vector<string>>(example1) == 6 && "Error verifying puzzle #2");
+
+    // Solve puzzle #2
+    std::cout << "Answer for puzzle #2 using sets and intersections: "<< solve_puzzle2_usingSets(data) << std::endl;
+
+    // Verify puzzle2 examples using sets and intersections
+    assert(solve_puzzle2_usingSetsCleaner<vector<string>>(example1) == 6 && "Error verifying puzzle #2");
+
+    // Solve puzzle #2
+    std::cout << "Answer for puzzle #2 using sets and intersections (cleaner): "<< solve_puzzle2_usingSetsCleaner(data) << std::endl;
+
+
 }

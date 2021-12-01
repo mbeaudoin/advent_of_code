@@ -18,9 +18,12 @@ constexpr int solve_puzzle1(T data)
 {
     int retValue=0;
     for(auto vi = data.begin(); vi != data.end() -1; vi++)
+    {
         if(*(vi+1) > *vi)
+        {
             retValue++;
-
+        }
+    }
     return retValue;;
 }
 
@@ -37,12 +40,17 @@ constexpr int solve_puzzle2(T data)
 
     int windowSize = 3;
 
-    for(auto vi = data.begin(); vi != data.end()-windowSize; vi++)
+    long curSum = sumN(data.begin(), windowSize);
+
+    for(auto vi = data.begin()+1; vi != data.end()-windowSize+1; vi++)
     {
-        if(sumN(vi, windowSize) < sumN(vi+1, windowSize))
+        long nextSum = sumN(vi, windowSize);
+
+        if(nextSum > curSum)
         {
             retValue++;
         }
+        curSum = nextSum;
     }
     return retValue;
 }

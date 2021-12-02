@@ -170,7 +170,7 @@ myutils::read_file(
         {
             std::string line;
             getline(file, line);
-            if(line.size() >= 0)
+            if(line.size() > 0)
                 buffer.push_back(line);
         }
     }

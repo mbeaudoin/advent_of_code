@@ -7,6 +7,7 @@
 #include <iostream>
 #include <cassert>
 #include <vector>
+#include <sstream>      // std::stringstream
 #include "myutils.h"
 
 using namespace std;

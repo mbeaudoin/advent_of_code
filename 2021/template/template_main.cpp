@@ -14,15 +14,28 @@ using namespace std;
 
 // Solve puzzle #1
 template <typename T>
-constexpr int solve_puzzle1(T data)
+constexpr int solve_puzzle1(T data, int debug=0)
 {
+    if(debug)
+    {
+        cout << "Initial data: " << endl;
+        for(auto d: data)
+            cout << d << endl;
+    }
+
     return 42;
 }
 
 // Solve puzzle #2
 template <typename T>
-constexpr int solve_puzzle2(T data)
+constexpr int solve_puzzle2(T data, int debug=0)
 {
+    if(debug)
+    {
+        cout << "Initial data: " << endl;
+        for(auto d: data)
+            cout << d << endl;
+    }
     return 42;
 }
 
@@ -49,16 +62,20 @@ int main(int argc, char *argv[])
 
     // --------- Puzzle #1 ---------
     // Verify puzzle1 examples
-    const auto example1 = "1";
-    assert(solve_puzzle1<vector<string>>({example1}) == 42 && "Error verifying puzzle #1");
+    const vector<string> example1 = {
+        "1"
+    };
+    assert(solve_puzzle1<vector<string>>(example1, 1) == 42 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
     std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data) << std::endl;
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    const auto example2 = "2";
-    assert(solve_puzzle2<vector<string>>({example2}) == 42 && "Error verifying puzzle #2");
+    const vector<string> example2 = {
+        "2"
+    };
+    assert(solve_puzzle2<vector<string>>(example2, 1) == 42 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
     std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;

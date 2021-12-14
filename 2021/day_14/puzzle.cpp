@@ -10,13 +10,14 @@
 #include <map>
 #include <sstream>      // std::stringstream
 #include <climits>
+#include <algorithm>
 #include "myutils.h"
 
 using namespace std;
 
 // Solve puzzle #1
 template <typename T>
-constexpr long solve_puzzle1(T data, int nbrSteps, int debug=0)
+constexpr unsigned long long solve_puzzle1(T data, int nbrSteps, int debug=0)
 {
     if(debug)
     {
@@ -27,7 +28,7 @@ constexpr long solve_puzzle1(T data, int nbrSteps, int debug=0)
 
     list<char> polymerTemplate;
     map<pair<char, char>, char> pairInsertion;
-    map<char, long> countElement;
+    map<char, unsigned long long> countElement;
 
     for(auto c: data[0])
     {
@@ -51,71 +52,59 @@ constexpr long solve_puzzle1(T data, int nbrSteps, int debug=0)
     }
 
     // Since the growing of the polymer is exponential in size, we will blow up
-    // when trying to reach 40 steps. Since every pair of the initial template
-    // can be grown independantly, let's grow every single initial pair individually
-    // and recombine the total of elements along the way.
+    // when trying to reach 40 steps. Let's evaluate using recursion instead
 
-    list<char>::iterator p_it1 = polymerTemplate.begin();
-    list<char>::iterator p_it2 = p_it1; p_it2++;
+    list<char>::iterator it1 = polymerTemplate.begin();
+    list<char>::iterator it2 = it1; it2++;
+
+    countElement[*it1] += 1;
+
+    // Define a recursive lambda function: add element, and recurse new created pair
+    std::function<void(char, char, int)> insertElement;
+    insertElement = [
+        &pairInsertion,
+        &countElement,
+        &insertElement](char left, char right, int nbrSteps)->void
+        {
+            // cout << "Steps remaining: " << nbrSteps << endl;
+
+            pair<char, char> curPair = std::make_pair(left, right);
+            map<pair<char, char>, char>::iterator ip = pairInsertion.find(curPair);
+
+            if(ip != pairInsertion.end())
+            {
+                char newElement = ip->second;
+                countElement[newElement] += 1;
+
+                if(--nbrSteps > 0)
+                {
+                    insertElement(left, newElement, nbrSteps);
+                    insertElement(newElement, right, nbrSteps);
+                }
+            }
+        };
 
     // March the template, pair by pair, for n steps
-    while(p_it2 != polymerTemplate.end())
+    while(it2 != polymerTemplate.end())
     {
-        // Grow this pair of the polymer
-        list<char> polyPair;
-        polyPair.push_back(*p_it1);
-        polyPair.push_back(*p_it2);
+        cout << " Evaluate pair: " << *it1 << ":" << *it2 << endl;
+        countElement[*it2] += 1;
 
-        cout << "Evaluate pair: " << *p_it1 << " : "  << *p_it2 << endl;
-
-        for(int i=0; i<nbrSteps; i++)
-        {
-            cout << "Step# : "  << i+1 << endl;
-            list<char>::iterator it1 = polyPair.begin();
-            list<char>::iterator it2 = it1; it2++;
-
-            while(it2 != polyPair.end())
-            {
-                pair<char, char> curPair = std::make_pair(*it1, *it2);
-
-                map<pair<char, char>, char>::iterator ip = pairInsertion.find(curPair);
-
-                if(ip != pairInsertion.end())
-                {
-                    //cout << "Inserting: " << ip->second << endl;
-                    polyPair.insert(it2, ip->second);
-                    it1++;
-                }
-                it1++, it2++;
-            }
-        }
-
-        // Count number of elements from this pair
-        // Need to handle correctly the second member of the pair
-        // So we don't count it twice on the next pair evaluation
-        for(auto p: polyPair)
-            countElement[p] += 1;
-
-        // Since the last element will be counted again in next evaluation,
-        // let's remove it
-        countElement[*p_it2] -= 1;
+        insertElement(*it1, *it2, nbrSteps);
 
         // Next pair
-        p_it1++; p_it2++;
+        it1++; it2++;
     }
-
-    countElement[polymerTemplate.back()] += 1;
 
     // Find min and max, compute result
-    long maxElement = INT_MIN;
-    long minElement = INT_MAX;
+    unsigned long long minElement = std::min_element(countElement.begin(), countElement.end(),
+        [](const auto& l, const auto& r) { return l.second < r.second; })->second;
 
-    for(auto c : countElement)
-    {
-        maxElement = std::max(maxElement, c.second);
-        minElement = std::min(minElement, c.second);
-    }
+    unsigned long long maxElement = std::max_element(countElement.begin(), countElement.end(),
+            [](const auto& l, const auto& r) { return l.second < r.second; })->second;
 
+    cout << "minElement: " << minElement << endl;
+    cout << "maxElement: " << maxElement << endl;
     cout << "Result: "  << maxElement - minElement << endl;
     return maxElement - minElement;
 }
@@ -182,8 +171,8 @@ int main(int argc, char *argv[])
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    assert(solve_puzzle1<vector<string>>(example1, 40, 1) == 2188189693529 && "Error verifying puzzle #2");
+    //assert(solve_puzzle1<vector<string>>(example1, 40, 1) == 2188189693529 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
-    std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;
+    //std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;
 }

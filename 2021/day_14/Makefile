@@ -1,7 +1,7 @@
 # Compilation variables
 CXX=g++
 CPPFLAGS= -I../include
-CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
+CXXFLAGS= -std=c++17 -O0 -g $(CPPFLAGS)
 
 # wget command and args to retrieve the day's input data
 # using the input session cookie from ${HOME}/.aoc_session_cookie

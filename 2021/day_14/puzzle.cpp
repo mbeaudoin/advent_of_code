@@ -8,12 +8,15 @@
 #include <cassert>
 #include <list>
 #include <map>
+#include <unordered_map>
 #include <sstream>      // std::stringstream
 #include <climits>
 #include <algorithm>
 #include "myutils.h"
 
 using namespace std;
+
+typedef unsigned long long ullong;
 
 // Solve puzzle #1
 template <typename T>
@@ -27,8 +30,8 @@ constexpr unsigned long long solve_puzzle1(T data, int nbrSteps, int debug=0)
     }
 
     list<char> polymerTemplate;
-    map<pair<char, char>, char> pairInsertion;
-    map<char, unsigned long long> countElement;
+    map<pair<char, char>, char> pairInsertionRule;
+    map<pair<char, char>, ullong> pairCounter[nbrSteps+1];
 
     for(auto c: data[0])
     {
@@ -42,84 +45,64 @@ constexpr unsigned long long solve_puzzle1(T data, int nbrSteps, int debug=0)
 
         ss >> ruleLeft >> scrap >> ruleRight;
 
-        pair<char, char> elementPair = std::make_pair(ruleLeft[0], ruleLeft[1]);
-        pairInsertion[elementPair] = ruleRight[0];
+        pairInsertionRule[{ruleLeft[0], ruleLeft[1]}] = ruleRight[0];
 
-        // Initialize counter
-        countElement[ruleLeft[0]] = 0;
-        countElement[ruleLeft[1]] = 0;
-        countElement[ruleRight[0]] = 0;
+        pairCounter[0][{ruleLeft[0], ruleLeft[1]}] = 0;
     }
 
-    // Since the growing of the polymer is exponential in size, we will blow up
-    // when trying to reach 40 steps. Let's evaluate using recursion instead
-
+    // Initialize pairCounter at step 0
     list<char>::iterator it1 = polymerTemplate.begin();
     list<char>::iterator it2 = it1; it2++;
 
-    countElement[*it1] += 1;
-
-    // Define a recursive lambda function: add element, and recurse new created pair
-    std::function<void(char, char, int)> insertElement;
-    insertElement = [
-        &pairInsertion,
-        &countElement,
-        &insertElement](char left, char right, int nbrSteps)->void
-        {
-            // cout << "Steps remaining: " << nbrSteps << endl;
-
-            pair<char, char> curPair = std::make_pair(left, right);
-            map<pair<char, char>, char>::iterator ip = pairInsertion.find(curPair);
-
-            if(ip != pairInsertion.end())
-            {
-                char newElement = ip->second;
-                countElement[newElement] += 1;
-
-                if(--nbrSteps > 0)
-                {
-                    insertElement(left, newElement, nbrSteps);
-                    insertElement(newElement, right, nbrSteps);
-                }
-            }
-        };
-
-    // March the template, pair by pair, for n steps
     while(it2 != polymerTemplate.end())
     {
-        cout << " Evaluate pair: " << *it1 << ":" << *it2 << endl;
-        countElement[*it2] += 1;
-
-        insertElement(*it1, *it2, nbrSteps);
-
+        pairCounter[0][{*it1, *it2}]++;
         // Next pair
         it1++; it2++;
     }
 
-    // Find min and max, compute result
-    unsigned long long minElement = std::min_element(countElement.begin(), countElement.end(),
-        [](const auto& l, const auto& r) { return l.second < r.second; })->second;
+    // Iterate through nSteps, counting pairs
+    for(int  i=1; i<=nbrSteps; i++)
+    {
+        for(auto &p : pairCounter[i-1])
+        {
+            ullong nbrNewpair = p.second;
+            char newElem = pairInsertionRule[{p.first.first,p.first.second}];
 
-    unsigned long long maxElement = std::max_element(countElement.begin(), countElement.end(),
-            [](const auto& l, const auto& r) { return l.second < r.second; })->second;
+            // Create new pairs using new element
+            pairCounter[i][{p.first.first,newElem}] += nbrNewpair;
+            pairCounter[i][{newElem, p.first.second}] += nbrNewpair;
+        }
+    }
 
-    cout << "minElement: " << minElement << endl;
-    cout << "maxElement: " << maxElement << endl;
-    cout << "Result: "  << maxElement - minElement << endl;
-    return maxElement - minElement;
-}
+    // Tally nbr of elements
+    map<char, ullong> countElement;
 
-// Solve puzzle #2
-template <typename T>
-constexpr int solve_puzzle2(T data, int debug=0)
-{
+    // Count left-most element from sequence
+    countElement[polymerTemplate.front()] = 1;
+
+    // Count right-most element of all pairs
+    for(auto &p : pairCounter[nbrSteps])
+    {
+        countElement[p.first.second] += p.second;
+    }
+
     if(debug)
     {
-        cout << "Initial data: " << endl;
-        for(auto d: data)
-            cout << d << endl;
+        for(auto &c : countElement)
+        {
+            cout << "Element: " << c.first << " : "  << c.second << endl;
+        }
     }
-    return 42;
+
+    // Compute min/max
+    unsigned long long maxElement = max_element(countElement.begin(), countElement.end(),
+        [](const auto& l, const auto& r) { return l.second < r.second; })->second;
+
+    unsigned long long minElement = min_element(countElement.begin(), countElement.end(),
+        [](const auto& l, const auto& r) { return l.second < r.second; })->second;
+
+    return maxElement - minElement;
 }
 
 int main(int argc, char *argv[])
@@ -147,32 +130,32 @@ int main(int argc, char *argv[])
     // Verify puzzle1 examples
     const vector<string> example1 = {
         "NNCB",
+        "BC -> B",
+        "BN -> B",
         "CH -> B",
-        "HH -> N",
-        "CB -> H",
-        "NH -> C",
-        "HB -> C",
         "HC -> B",
+        "NB -> B",
+        "NC -> B",
+        "CN -> C",
+        "HB -> C",
         "HN -> C",
+        "NH -> C",
         "NN -> C",
         "BH -> H",
-        "NC -> B",
-        "NB -> B",
-        "BN -> B",
+        "CB -> H",
         "BB -> N",
-        "BC -> B",
         "CC -> N",
-        "CN -> C"
+        "HH -> N"
     };
-    assert(solve_puzzle1<vector<string>>(example1, 10, 1) == 1588 && "Error verifying puzzle #1");
+    assert(solve_puzzle1<vector<string>>(example1, 10, 0) == 1588 && "Error verifying puzzle #1");
 
     // Solve puzzle #1
-    std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data, 10, 1) << std::endl;
+    std::cout << "Answer for puzzle #1: "<< solve_puzzle1(data, 10, 0) << std::endl;
 
     // --------- Puzzle #2 ---------
     // Verify puzzle2 examples
-    //assert(solve_puzzle1<vector<string>>(example1, 40, 1) == 2188189693529 && "Error verifying puzzle #2");
+    assert(solve_puzzle1<vector<string>>(example1, 40, 0) == 2188189693529 && "Error verifying puzzle #2");
 
     // Solve puzzle #2
-    //std::cout << "Answer for puzzle #2: "<< solve_puzzle2(data) << std::endl;
+    std::cout << "Answer for puzzle #2: "<< solve_puzzle1(data, 40) << std::endl;
 }

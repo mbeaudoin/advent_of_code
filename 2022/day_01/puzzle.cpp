@@ -1,5 +1,5 @@
 //
-// Copyright (C) Martin Beaudoin. 2020. All Rights Reserved.
+// Copyright (C) Martin Beaudoin. 2022. All Rights Reserved.
 //
 // See the repository's LICENSE file for the full license details.
 //

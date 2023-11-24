@@ -6,7 +6,7 @@ CXXFLAGS= -std=c++17 -O2 $(CPPFLAGS)
 # wget command and args to retrieve the day's input data
 # using the input session cookie from ${HOME}/.aoc_session_cookie
 WGET=wget
-WGET_ARGS=--load-cookies ${HOME}/.aoc_session_cookie
+WGET_ARGS=--load-cookies ${HOME}/.aoc_session_cookie_2023
 
 # Extract the day number from the current directory name
 CUR_DIR:=$(notdir $(CURDIR))
